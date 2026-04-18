@@ -18,6 +18,7 @@ export default defineConfig({
     structureTool({
       structure: (S) =>
         S.list()
+          .id('root')
           .title('心靈心情')
           .items([
             S.listItem()
@@ -33,11 +34,21 @@ export default defineConfig({
             S.listItem()
               .id('categories')
               .title('分類')
-              .child(S.documentTypeList('category').id('category-list')),
+              .child(
+                S.documentList()
+                  .id('category-list')
+                  .title('所有分類')
+                  .filter('_type == "category"')
+              ),
             S.listItem()
               .id('authors')
               .title('作者')
-              .child(S.documentTypeList('author').id('author-list')),
+              .child(
+                S.documentList()
+                  .id('author-list')
+                  .title('所有作者')
+                  .filter('_type == "author"')
+              ),
             S.divider(),
             S.listItem()
               .id('new-post')
