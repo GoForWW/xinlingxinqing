@@ -1,4 +1,4 @@
-// File: /home/node/Projects/xinling-blog/src/app/layout.tsx
+// File: /home/node/.openclaw/workspace/Projects/xinlingxinqing/src/app/layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -83,9 +83,7 @@ export default async function HomePage() {
               <Link href="#categories" className="text-[#6B7A64] hover:text-[#5A6A54] transition-colors">
                 分類
               </Link>
-              <Link href="#newsletter" className="text-[#6B7A64] hover:text-[#5A6A54] transition-colors">
-                訂閱
-              </Link>
+
             </div>
           </div>
         </div>
@@ -333,50 +331,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section id="newsletter" className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="relative bg-[#6B7A64] rounded-[2.5rem] p-12 md:p-16 overflow-hidden">
-            {/* Background texture */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4A574] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-            </div>
-            <div className="relative text-center space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white/90 text-sm">
-                免費每週見解
-              </div>
-              <h2 className="text-3xl md:text-4xl font-serif text-white">
-                加入內心旅程
-              </h2>
-              <p className="text-white/80 text-lg max-w-xl mx-auto leading-relaxed">
-                每週將心理學、情感關係和精神健康的深入探索送到你的收件箱。沒有垃圾郵件，只有實質內容。
-              </p>
-              <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto pt-4">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  className="flex-1 px-6 py-4 bg-white/10 backdrop-blur-sm border border-white/20 
-                           rounded-full text-white placeholder-white/60
-                           focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-                />
-                <button
-                  type="submit"
-                  className="px-8 py-4 bg-[#D4A574] hover:bg-[#C49464] text-[#4A5568] 
-                           font-medium rounded-full transition-all duration-300
-                           hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  訂閱
-                </button>
-              </form>
-              <p className="text-white/60 text-xs">
-                加入 2,400+ 讀者。可隨時取消訂閱。
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
       <footer className="py-16 px-6 border-t border-[#E8E4DD]">
         <div className="max-w-6xl mx-auto">
@@ -401,7 +355,6 @@ export default async function HomePage() {
               <ul className="space-y-3 text-sm text-[#6B7A64]">
                 <li><a href="#about" className="hover:text-[#5A6A54] transition-colors">關於</a></li>
                 <li><Link href="/blog" className="hover:text-[#5A6A54] transition-colors">文章</Link></li>
-                <li><a href="#newsletter" className="hover:text-[#5A6A54] transition-colors">訂閱</a></li>
               </ul>
             </div>
           </div>

@@ -108,7 +108,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/home/node/Projects/xinling-blog",
+    "outputFileTracingRoot": "/home/node/.openclaw/workspace/Projects/xinlingxinqing",
     "experimental": {
       "useSkewCookie": false,
       "cacheLife": {
@@ -298,10 +298,10 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.js",
     "turbopack": {
-      "root": "/home/node/Projects/xinling-blog"
+      "root": "/home/node/.openclaw/workspace/Projects/xinlingxinqing"
     }
   },
-  "appDir": "/home/node/Projects/xinling-blog",
+  "appDir": "/home/node/.openclaw/workspace/Projects/xinlingxinqing",
   "relativeAppDir": "",
   "files": [
     ".next/routes-manifest.json",
@@ -324,6 +324,6 @@
     ".next/required-server-files.json"
   ],
   "ignore": [
-    "node_modules/next/dist/compiled/@ampproject/toolbox-optimizer/**/*"
+    "node_modules/.pnpm/next@15.5.15_@babel+core@7.29.0_babel-plugin-react-compiler@1.0.0_react-dom@19.2.5_react@19.2.5__react@19.2.5/node_modules/next/dist/compiled/@ampproject/toolbox-optimizer/**/*"
   ]
 }
