@@ -21,21 +21,26 @@ export default defineConfig({
           .title('心靈心情')
           .items([
             S.listItem()
+              .id('all-posts')
               .title('文章')
               .child(
                 S.documentList()
+                  .id('post-list')
                   .title('所有文章')
                   .filter('_type == "post"')
                   .defaultOrdering([{ field: 'publishedAt', direction: 'desc' }])
               ),
             S.listItem()
+              .id('categories')
               .title('分類')
-              .child(S.documentTypeList('category')),
+              .child(S.documentTypeList('category').id('category-list')),
             S.listItem()
+              .id('authors')
               .title('作者')
-              .child(S.documentTypeList('author')),
+              .child(S.documentTypeList('author').id('author-list')),
             S.divider(),
             S.listItem()
+              .id('new-post')
               .title('新增文章')
               .child(
                 S.document()
