@@ -333,10 +333,13 @@ export default async function HomePage() {
             <div className="space-y-4">
               <h4 className="font-medium text-[#4A5568]">分類</h4>
               <ul className="space-y-3 text-sm text-[#6B7A64]">
-                <li><a href="#" className="hover:text-[#5A6A54] transition-colors">Psychology</a></li>
-                <li><a href="#" className="hover:text-[#5A6A54] transition-colors">Relationships</a></li>
-                <li><a href="#" className="hover:text-[#5A6A54] transition-colors">Mental Health</a></li>
-                <li><a href="#" className="hover:text-[#5A6A54] transition-colors">Productivity</a></li>
+                {categories_data.map((cat) => (
+                  <li key={cat._id}>
+                    <Link href={`/category/${cat.slug.current}`} className="hover:text-[#5A6A54] transition-colors">
+                      {cat.title}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
             <div className="space-y-4">
