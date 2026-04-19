@@ -1,3 +1,4 @@
+import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getAllPosts, getAllCategories } from '@/lib/api'
@@ -11,55 +12,39 @@ function formatDate(dateString: string) {
   return `${date.getFullYear()}年${months[date.getMonth()]}${date.getDate()}日`
 }
 
-const categories = [
-  {
-    name: 'Psychology',
-    description: '了解心智與行為',
-    icon: (
-      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="24" cy="20" r="12" />
-        <path d="M24 32v12M16 44h16" />
-        <path d="M18 18c0-3 2.5-5 6-5s6 2 6 5" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Relationships',
-    description: '連結、溝通、親密',
-    icon: (
-      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="16" cy="20" r="8" />
-        <circle cx="32" cy="20" r="8" />
-        <path d="M8 40c0-4 4-7 8-7h4M40 40c0-4-4-7-8-7h-4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Mental Health',
-    description: '健康、壓力、自愛',
-    icon: (
-      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M24 44c10-8 16-15 16-22a16 16 0 10-32 0c0 7 6 14 16 22z" strokeLinejoin="round" />
-        <circle cx="18" cy="22" r="2" fill="currentColor" />
-        <circle cx="30" cy="22" r="2" fill="currentColor" />
-        <path d="M18 30c2 2 4 3 6 3s4-1 6-3" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Productivity',
-    description: '專注、習慣、成長',
-    icon: (
-      <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M12 8v8h8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M8 12h8v8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M36 8v8h8M40 12h-8v8" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="24" cy="32" r="12" />
-        <path d="M24 26v8l4 4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-]
+const categoryIcons: Record<string, React.ReactNode> = {
+  Psychology: (
+    <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="24" cy="20" r="12" />
+      <path d="M24 32v12M16 44h16" />
+      <path d="M18 18c0-3 2.5-5 6-5s6 2 6 5" strokeLinecap="round" />
+    </svg>
+  ),
+  Relationships: (
+    <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="16" cy="20" r="8" />
+      <circle cx="32" cy="20" r="8" />
+      <path d="M8 40c0-4 4-7 8-7h4M40 40c0-4-4-7-8-7h-4" strokeLinecap="round" />
+    </svg>
+  ),
+  'Mental Health': (
+    <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M24 44c10-8 16-15 16-22a16 16 0 10-32 0c0 7 6 14 16 22z" strokeLinejoin="round" />
+      <circle cx="18" cy="22" r="2" fill="currentColor" />
+      <circle cx="30" cy="22" r="2" fill="currentColor" />
+      <path d="M18 30c2 2 4 3 6 3s4-1 6-3" strokeLinecap="round" />
+    </svg>
+  ),
+  Productivity: (
+    <svg className="w-8 h-8" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 8v8h8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 12h8v8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M36 8v8h8M40 12h-8v8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="24" cy="32" r="12" />
+      <path d="M24 26v8l4 4" strokeLinecap="round" />
+    </svg>
+  ),
+}
 
 export default async function HomePage() {
   const posts = await getAllPosts()
@@ -305,28 +290,32 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <div
-                key={category.name}
-                className="group p-8 bg-white rounded-3xl border border-[#E8E4DD] hover:shadow-md transition-all duration-300 cursor-pointer"
-              >
-                <div className="text-[#6B7A64] mb-6 group-hover:text-[#5A6A54] transition-colors">
-                  {category.icon}
-                </div>
-                <h3 className="text-xl font-serif text-[#4A5568] mb-2">
-                  {category.name}
-                </h3>
-                <p className="text-[#6B7A64]/70 text-sm leading-relaxed">
-                  {category.description}
-                </p>
-                <div className="mt-6 flex items-center gap-2 text-[#6B7A64] text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  探索
-                  <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </div>
-            ))}
+            {categories_data.slice(0, 4).map((category) => {
+              const icon = categoryIcons[category.title] || categoryIcons['Mental Health']
+              return (
+                <Link
+                  key={category._id}
+                  href={`/category/${category.slug.current}`}
+                  className="group p-8 bg-white rounded-3xl border border-[#E8E4DD] hover:shadow-md transition-all duration-300"
+                >
+                  <div className="text-[#6B7A64] mb-6 group-hover:text-[#5A6A54] transition-colors">
+                    {icon}
+                  </div>
+                  <h3 className="text-xl font-serif text-[#4A5568] mb-2">
+                    {category.title}
+                  </h3>
+                  <p className="text-[#6B7A64]/70 text-sm leading-relaxed">
+                    {category.description || '探索這個領域的文章'}
+                  </p>
+                  <div className="mt-6 flex items-center gap-2 text-[#6B7A64] text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    探索
+                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </section>
