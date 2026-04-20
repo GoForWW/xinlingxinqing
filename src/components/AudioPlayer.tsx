@@ -13,9 +13,19 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [hasError, setHasError] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   // Don't render anything if no src
   if (!src) return null
+
+  // Cleanup: pause audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+    }
+  }, [])
 
   const togglePlay = () => {
     const audio = audioRef.current
@@ -23,9 +33,13 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
     if (isPlaying) {
       audio.pause()
     } else {
-      audio.play()
+      try {
+        audio.play()
+      } catch (err) {
+        // play() rejected (autoplay blocked, etc.)
+        setIsPlaying(false)
+      }
     }
-    setIsPlaying(!isPlaying)
   }
 
   const handleTimeUpdate = () => {
@@ -35,7 +49,10 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
 
   const handleLoadedMetadata = () => {
     const audio = audioRef.current
-    if (audio) setDuration(audio.duration)
+    if (audio) {
+      setDuration(audio.duration)
+      setIsLoaded(true)
+    }
   }
 
   const handleError = () => {
@@ -45,10 +62,21 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const audio = audioRef.current
     const bar = e.currentTarget
-    if (!audio || !duration) return
+    if (!audio || !isLoaded || !duration) return
     const rect = bar.getBoundingClientRect()
     const ratio = (e.clientX - rect.left) / rect.width
     audio.currentTime = ratio * duration
+  }
+
+  const handleProgressKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const audio = audioRef.current
+    if (!audio || !isLoaded || !duration) return
+    const step = 5 // seconds per arrow key press
+    if (e.key === 'ArrowRight') {
+      audio.currentTime = Math.min(audio.currentTime + step, duration)
+    } else if (e.key === 'ArrowLeft') {
+      audio.currentTime = Math.max(audio.currentTime - step, 0)
+    }
   }
 
   const formatTime = (seconds: number) => {
@@ -77,6 +105,8 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
         onLoadedMetadata={handleLoadedMetadata}
         onError={handleError}
         onEnded={() => setIsPlaying(false)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         preload="metadata"
       />
       
@@ -95,7 +125,17 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
 
       <div style={styles.time}>{formatTime(currentTime)}</div>
 
-      <div style={styles.progressBar} onClick={handleSeek}>
+      <div
+        style={styles.progressBar}
+        onClick={handleSeek}
+        onKeyDown={handleProgressKeyDown}
+        role="slider"
+        aria-label={title}
+        aria-valuenow={Math.round(currentTime)}
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration)}
+        tabIndex={isLoaded ? 0 : -1}
+      >
         <div style={{ ...styles.progressFill, width: `${progress}%` }} />
       </div>
 
