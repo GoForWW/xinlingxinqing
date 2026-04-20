@@ -5,6 +5,7 @@ import { getPostBySlug, getAllPostSlugs, getAllCategories } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
 import ReadingProgress from '@/components/ReadingProgress'
+import SocialShare from '@/components/SocialShare'
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)
@@ -181,6 +182,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 })}
               </div>
             )}
+
+            {/* Social Share */}
+            <SocialShare title={post.title} url={typeof window !== 'undefined' ? window.location.href : ''} />
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
