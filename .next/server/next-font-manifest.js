@@ -1,1 +1,0 @@
-self.__NEXT_FONT_MANIFEST='{"pages":{},"app":{"/home/node/.openclaw/workspace/Projects/xinlingxinqing/src/app/layout":["static/media/7b0b24f36b1a6d0b-s.p.woff2","static/media/97ac91773d3121b2-s.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}';

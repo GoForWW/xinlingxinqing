@@ -2,3 +2,4 @@ node_modules/
 .next/
 .env.local
 .next/cache/
+trigger_rebuild.txt
