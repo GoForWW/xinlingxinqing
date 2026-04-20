@@ -1,45 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
+import { assertValidRequest } from '@sanity/webhook'
 
-export const runtime = 'nodejs'
-
-interface SanityWebhookBody {
-  _type?: string
-  slug?: { current?: string }
-}
-
-function verifySignature(body: string, signature: string, secret: string): boolean {
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('hex')
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(`sha256=${expected}`)
-    )
-  } catch {
-    return false
-  }
-}
+const SECRET = process.env.SANITY_WEBHOOK_SECRET
 
 export async function POST(req: NextRequest) {
-  const secret = process.env.SANITY_WEBHOOK_SECRET
-
-  if (!secret) {
+  if (!SECRET) {
     console.error('SANITY_WEBHOOK_SECRET not configured')
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
   }
 
-  const signature = req.headers.get('sanity-webhook-signature') || ''
   const body = await req.text()
 
-  // Verify signature
-  if (!verifySignature(body, signature, secret)) {
+  try {
+    // This validates the request signature using Sanity's official toolkit
+    await assertValidRequest({ headers: req.headers, body }, SECRET)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Invalid signature'
+    console.error('Webhook signature verification failed:', message)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let payload: SanityWebhookBody
+  let payload
   try {
     payload = JSON.parse(body)
   } catch {

@@ -20,6 +20,9 @@ importers:
       '@sanity/vision':
         specifier: ^3.99.0
         version: 3.99.0(@babel/runtime@7.29.2)(@codemirror/lint@6.9.5)(@codemirror/theme-one-dark@6.1.3)(@emotion/is-prop-valid@1.4.0)(codemirror@6.0.2)(react-dom@19.2.5(react@19.2.5))(react-is@19.2.5)(react@19.2.5)(styled-components@6.4.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))
+      '@sanity/webhook':
+        specifier: ^4.0.4
+        version: 4.0.4
       next:
         specifier: ^15.2.0
         version: 15.5.15(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -2125,6 +2128,10 @@ packages:
         optional: true
       svelte:
         optional: true
+
+  '@sanity/webhook@4.0.4':
+    resolution: {integrity: sha512-c8LmzR5Wx93zJ10ohhp0XlmPrTNSFyvPcLbNY/sN45Wj5VOngz4FbBMbX9j64sSQLt+676U6OhiVfjs1yw3YCw==}
+    engines: {node: '>=20.0.0'}
 
   '@sentry-internal/browser-utils@8.55.1':
     resolution: {integrity: sha512-SipXiwVhJrxzy3/4kf+YIFmpYlLKtGSRD+er7SBCcuSBtv31Fee8IXMDvk+bq24gRXxyjOLUmT//GGXjy2LL6w==}
@@ -7754,6 +7761,8 @@ snapshots:
       - '@sanity/types'
       - sanity
       - typescript
+
+  '@sanity/webhook@4.0.4': {}
 
   '@sentry-internal/browser-utils@8.55.1':
     dependencies:
