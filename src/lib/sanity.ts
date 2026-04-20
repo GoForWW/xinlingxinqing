@@ -78,3 +78,39 @@ export const queries = {
     "tags": tags
   }`,
 }
+
+/**
+ * Upload a file buffer to Sanity as a managed asset.
+ * Returns the Sanity asset reference like { _ref: "file-xxxx-xxxx-xxxx", _type: "reference" }
+ */
+export async function uploadAsset(
+  buffer: Buffer,
+  filename: string,
+  contentType: string
+): Promise<{ _ref: string; _type: 'reference' }> {
+  const projectId = 'vvnk3r5p'
+  const dataset = 'production'
+
+  const res = await fetch(
+    `https://api.sanity.io/v2024-01-01/assets/files/${dataset}?projectId=${projectId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': contentType,
+        Authorization: `Bearer ${process.env.SANITY_API_TOKEN}`,
+      },
+      body: buffer,
+    }
+  )
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Sanity asset upload failed: ${res.status} ${text}`)
+  }
+
+  const data = await res.json()
+  return {
+    _ref: data._id,
+    _type: 'reference',
+  }
+}
