@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPostBySlug, getAllPostSlugs, getAllCategories, getRelatedPosts, getAdjacentPosts } from '@/lib/api'
+import { getReadingTimeObject } from '@/lib/readingTime'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
 import ReadingProgress from '@/components/ReadingProgress'
@@ -23,6 +24,9 @@ export async function generateStaticParams() {
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const post = await getPostBySlug(slug)
+
+  const readingTime = post.body ? getReadingTimeObject(JSON.stringify(post.body)) : { minutes: 1, text: '1 分鐘' }
+
   const categories = await getAllCategories()
 
   if (!post) {
@@ -104,6 +108,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
             <div className="flex items-center gap-4 text-sm text-[#6B7A64] mb-6">
               <span>{formatDate(post.publishedAt)}</span>
+              <span className="text-[#6B7A64]/70">· {readingTime.text}</span>
               {post.author && <span>作者：{post.author.name}</span>}
             </div>
 

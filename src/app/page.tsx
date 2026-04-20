@@ -2,6 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getAllPosts, getAllCategories } from '@/lib/api'
+import { getReadingTime } from '@/lib/readingTime'
 import SearchModal from '@/components/SearchModal'
 import Footer from '@/components/Footer'
 import { urlFor } from '@/lib/sanity'
@@ -199,6 +200,7 @@ export default async function HomePage() {
                       <span className="text-sm text-[#6B7A64]">
                         {formatDate(featuredPost.publishedAt)}
                       </span>
+                      <span className="text-sm text-[#6B7A64]/70">· {getReadingTime(featuredPost.excerpt || '')}</span>
                     </div>
                     <h3 className="text-2xl md:text-3xl font-serif font-bold text-[#4A5568] mb-4 group-hover:text-[#6B7A64] transition-colors">
                       {featuredPost.title}
@@ -257,6 +259,7 @@ export default async function HomePage() {
                         <span className="text-xs text-[#6B7A64]">
                           {formatDate(post.publishedAt)}
                         </span>
+                        <span className="text-xs text-[#6B7A64]/70">· {getReadingTime(post.excerpt || '')}</span>
                       </div>
                       <h4 className="text-lg font-serif font-semibold text-[#4A5568] mb-2 group-hover:text-[#6B7A64] transition-colors line-clamp-2">
                         {post.title}
