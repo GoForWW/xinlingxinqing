@@ -9,6 +9,7 @@ export interface Post {
   categories?: Category[]
   tags?: string[]
   author?: Author
+  audio?: SanityFile
 }
 
 export interface Category {
@@ -35,5 +36,13 @@ export interface SanityImage {
     y: number
     height: number
     width: number
+  }
+}
+
+export interface SanityFile {
+  _type: 'file'
+  asset: {
+    _ref: string
+    _type: 'reference'
   }
 }

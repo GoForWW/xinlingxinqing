@@ -89,6 +89,15 @@ export default defineType({
       type: 'reference',
       to: { type: 'author' },
     }),
+    defineField({
+      name: 'audio',
+      title: '音頻',
+      type: 'file',
+      options: {
+        accept: 'audio/mp3,audio/mpeg',
+      },
+      description: '自動從文章正文生成的語音版本',
+    }),
   ],
   preview: {
     select: {
