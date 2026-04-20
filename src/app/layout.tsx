@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Outfit, Source_Serif_4 } from 'next/font/google'
+import Providers from '@/components/ThemeProvider'
 import './globals.css'
 
 const outfit = Outfit({
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${outfit.variable} ${sourceSerif.variable}`}>
       <body className="bg-cream text-earth-800 font-sans antialiased">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )
