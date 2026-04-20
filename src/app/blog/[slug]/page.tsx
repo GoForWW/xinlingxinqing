@@ -3,12 +3,13 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPostBySlug, getAllPostSlugs, getAllCategories, getRelatedPosts, getAdjacentPosts } from '@/lib/api'
 import { getReadingTimeObject } from '@/lib/readingTime'
-import { urlFor } from '@/lib/sanity'
+import { urlFor, projectId, dataset } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
 import ReadingProgress from '@/components/ReadingProgress'
 import SocialShare from '@/components/SocialShare'
 import RelatedPosts from '@/components/RelatedPosts'
 import PrevNextNav from '@/components/PrevNextNav'
+import AudioPlayer from '@/components/AudioPlayer'
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)
@@ -116,6 +117,16 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#4A5568] mb-6">
               {post.title}
             </h1>
+
+            {/* Audio Player */}
+            {post.audio?.asset?._ref && (
+              <div className="mb-8">
+                <AudioPlayer
+                  src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.audio.asset._ref}`}
+                  title={post.title}
+                />
+              </div>
+            )}
 
             {/* Excerpt */}
             {post.excerpt && (
