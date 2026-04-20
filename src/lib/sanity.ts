@@ -100,7 +100,7 @@ export async function uploadAsset(
         'Content-Type': contentType,
         Authorization: `Bearer ${process.env.SANITY_API_TOKEN}`,
       },
-      body: buffer,
+      body: new Uint8Array(buffer),
     }
   )
 

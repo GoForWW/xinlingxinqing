@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // This validates the request signature using Sanity's official toolkit
-    await assertValidRequest({ headers: req.headers, body }, SECRET)
+    await assertValidRequest({ headers: req.headers as unknown as Record<string, string | string[] | undefined>, body }, SECRET)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Invalid signature'
     console.error('Webhook signature verification failed:', message)
