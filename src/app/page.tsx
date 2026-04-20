@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { getAllPosts, getAllCategories } from '@/lib/api'
 import SearchModal from '@/components/SearchModal'
+import Footer from '@/components/Footer'
 import { urlFor } from '@/lib/sanity'
 import type { Post, Category } from '@/lib/types'
 
@@ -321,46 +322,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-16 px-6 border-t border-[#E8E4DD]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="md:col-span-2 space-y-4">
-              <h3 className="font-serif text-xl text-[#6B7A64]">心靈心情</h3>
-              <p className="text-[#6B7A64]/70 text-sm leading-relaxed max-w-sm">
-                探索心理學、情感關係、精神健康和生產力，為追求更深理解 和有意義成長的人而寫。
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="font-medium text-[#4A5568]">分類</h4>
-              <ul className="space-y-3 text-sm text-[#6B7A64]">
-                {categories_data.map((cat) => (
-                  <li key={cat._id}>
-                    <Link href={`/category/${cat.slug.current}`} className="hover:text-[#5A6A54] transition-colors">
-                      {cat.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="font-medium text-[#4A5568]">連結</h4>
-              <ul className="space-y-3 text-sm text-[#6B7A64]">
-                <li><a href="#about" className="hover:text-[#5A6A54] transition-colors">關於</a></li>
-                <li><Link href="/blog" className="hover:text-[#5A6A54] transition-colors">文章</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-[#E8E4DD] flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-[#6B7A64]/50 text-sm">
-              © {new Date().getFullYear()} 心靈心情. All rights reserved.
-            </p>
-            <p className="text-[#6B7A64]/50 text-sm">
-              用心為走在自我探索道路上的人而建。
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer categories={categories_data} />
     </div>
   )
 }
