@@ -1,12 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPostBySlug, getAllPostSlugs, getAllCategories, getRelatedPosts } from '@/lib/api'
+import { getPostBySlug, getAllPostSlugs, getAllCategories, getRelatedPosts, getAdjacentPosts } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
 import ReadingProgress from '@/components/ReadingProgress'
 import SocialShare from '@/components/SocialShare'
 import RelatedPosts from '@/components/RelatedPosts'
+import PrevNextNav from '@/components/PrevNextNav'
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)
@@ -30,6 +31,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   const categoryIds = post.categories?.map((c: any) => c._ref) || []
   const relatedPosts = await getRelatedPosts(slug, categoryIds, 3)
+  const { prev, next } = await getAdjacentPosts(slug)
 
   return (
     <div className="min-h-screen bg-[#F7F4EF]">
@@ -191,6 +193,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             <SocialShare title={post.title} url={typeof window !== 'undefined' ? window.location.href : ''} />
 
             <RelatedPosts posts={relatedPosts} />
+
+            <PrevNextNav prev={prev} next={next} />
 
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
