@@ -43,3 +43,32 @@
     text-wrap: balance;
   }
 }
+
+/* Dark mode overrides */
+.dark body {
+  @apply bg-[#1a1a1a] text-[#e5e5e5];
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4 {
+  @apply text-[#f5f5f5];
+}
+
+.dark header {
+  @apply bg-[#1a1a1a]/80 border-[#333];
+}
+
+.dark article {
+  @apply bg-[#252525];
+}
+
+.dark footer {
+  @apply bg-[#1a1a1a];
+}
+
+.dark .text-\[\#4A5568\] {
+  @apply text-[#e5e5e5];
+}
+
+.dark .text-\[\#6B7A64\] {
+  @apply text-[#a8b5a3];
+}
