@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { client, writeClient, uploadAsset } from '@/lib/sanity'
 
+export const runtime = 'nodejs'
+
 // Extract plain text from Sanity body blocks
 function extractText(body: any[]): string {
   if (!body) return ''
@@ -43,6 +45,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No text content in post body' }, { status: 400 })
     }
 
+    // 3b. Validate text length (MiniMax TTS limit ~5000 chars)
+    if (text.length > 5000) {
+      return NextResponse.json(
+        { error: 'Text too long for TTS generation (max 5000 characters)' },
+        { status: 400 }
+      )
+    }
+
     // 4. Call MiniMax TTS API
     const ttsRes = await fetch('https://api.minimax.io/v1/t2a_v2', {
       method: 'POST',
@@ -61,6 +71,7 @@ export async function POST(req: NextRequest) {
           sample_rate: 32000,
         },
       }),
+      signal: AbortSignal.timeout(60000),
     })
 
     if (!ttsRes.ok) {
@@ -73,9 +84,10 @@ export async function POST(req: NextRequest) {
 
     // 5. Get audio buffer and upload to Sanity
     const audioBuffer = Buffer.from(await ttsRes.arrayBuffer())
+    const safeSlug = slug.replace(/[^a-z0-9-]/gi, '_')
     const audioRef = await uploadAsset(
       audioBuffer,
-      `${slug}-audio.mp3`,
+      `${safeSlug}-audio.mp3`,
       'audio/mpeg'
     )
 
@@ -94,6 +106,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error('generate-audio error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json({ error: 'TTS generation failed' }, { status: 500 })
   }
 }
