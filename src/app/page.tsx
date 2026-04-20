@@ -2,6 +2,7 @@ import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getAllPosts, getAllCategories } from '@/lib/api'
+import SearchModal from '@/components/SearchModal'
 import { urlFor } from '@/lib/sanity'
 import type { Post, Category } from '@/lib/types'
 
@@ -68,7 +69,7 @@ export default async function HomePage() {
               <Link href="#categories" className="text-[#6B7A64] hover:text-[#5A6A54] transition-colors">
                 分類
               </Link>
-
+              <SearchModal />
             </div>
           </div>
         </div>
