@@ -23,3 +23,18 @@ export async function getAllPostSlugs(): Promise<string[]> {
   )
   return posts.map((post) => post.slug.current)
 }
+
+export async function getRelatedPosts(currentSlug: string, categoryIds: string[], limit = 3): Promise<any[]> {
+  return client.fetch(
+    `*[_type == "post" && slug.current != $currentSlug && count((categories[]._ref)[@ in $categoryIds]) > 0][0...$limit]{
+      _id,
+      title,
+      slug,
+      excerpt,
+      publishedAt,
+      mainImage,
+      categories
+    }`,
+    { currentSlug, categoryIds, limit }
+  )
+}
