@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getPostBySlug, getAllPostSlugs, getAllCategories } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
+import ReadingProgress from '@/components/ReadingProgress'
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)
@@ -27,6 +28,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   return (
     <div className="min-h-screen bg-[#F7F4EF]">
+      <ReadingProgress />
       {/* Header */}
       <header className="bg-[#F7F4EF] border-b border-[#E8E4DD]">
         <div className="max-w-6xl mx-auto px-4 py-6">
