@@ -25,13 +25,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const post = await getPostBySlug(slug)
 
-  const readingTime = post.body ? getReadingTimeObject(JSON.stringify(post.body)) : { minutes: 1, text: '1 分鐘' }
-
-  const categories = await getAllCategories()
-
   if (!post) {
     notFound()
   }
+
+  const readingTime = post.body ? getReadingTimeObject(JSON.stringify(post.body)) : { minutes: 1, text: '1 分鐘' }
+
+  const categories = await getAllCategories()
 
   const categoryIds = post.categories?.map((c: any) => c._ref) || []
   const relatedPosts = await getRelatedPosts(slug, categoryIds, 3)
