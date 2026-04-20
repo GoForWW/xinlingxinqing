@@ -88,11 +88,12 @@ export async function uploadAsset(
   filename: string,
   contentType: string
 ): Promise<{ _ref: string; _type: 'reference' }> {
-  const projectId = 'vvnk3r5p'
-  const dataset = 'production'
+  if (!process.env.SANITY_API_TOKEN) {
+    throw new Error('SANITY_API_TOKEN is not set')
+  }
 
   const res = await fetch(
-    `https://api.sanity.io/v2024-01-01/assets/files/${dataset}?projectId=${projectId}`,
+    `https://api.sanity.io/v2024-01-01/assets/files/${dataset}/${encodeURIComponent(filename)}?projectId=${projectId}`,
     {
       method: 'POST',
       headers: {
@@ -110,7 +111,7 @@ export async function uploadAsset(
 
   const data = await res.json()
   return {
-    _ref: data._id,
+    _ref: data._id ?? filename,
     _type: 'reference',
   }
 }
