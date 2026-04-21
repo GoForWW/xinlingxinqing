@@ -17,6 +17,8 @@ function formatDate(dateString: string) {
   return `${date.getFullYear()}年${months[date.getMonth()]}${date.getDate()}日`
 }
 
+export const revalidate = 60 // ISR: revalidate page every 60s to pick up new audio from Sanity
+
 export async function generateStaticParams() {
   const slugs = await getAllPostSlugs()
   return slugs.map((slug) => ({ slug }))
