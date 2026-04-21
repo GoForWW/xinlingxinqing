@@ -92,7 +92,7 @@ export async function uploadAsset(
     throw new Error('SANITY_API_TOKEN is not set')
   }
 
-  const uploadUrl = `https://api.sanity.io/v2024-01-01/assets/files/${dataset}/${encodeURIComponent(filename)}?projectId=${projectId}`
+  const uploadUrl = `https://api.sanity.io/v2024-01-01/assets/files/${dataset}?projectId=${projectId}&filename=${encodeURIComponent(filename)}`
   console.error('[DEBUG] uploadAsset URL:', uploadUrl)
   console.error('[DEBUG] uploadAsset token prefix:', process.env.SANITY_API_TOKEN?.substring(0, 10))
 
