@@ -92,20 +92,22 @@ export async function uploadAsset(
     throw new Error('SANITY_API_TOKEN is not set')
   }
 
-  const res = await fetch(
-    `https://api.sanity.io/v2024-01-01/assets/files/${dataset}/${encodeURIComponent(filename)}?projectId=${projectId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': contentType,
-        Authorization: `Bearer ${process.env.SANITY_API_TOKEN}`,
-      },
-      body: new Uint8Array(buffer),
-    }
-  )
+  const uploadUrl = `https://api.sanity.io/v2024-01-01/assets/files/${dataset}/${encodeURIComponent(filename)}?projectId=${projectId}`
+  console.error('[DEBUG] uploadAsset URL:', uploadUrl)
+  console.error('[DEBUG] uploadAsset token prefix:', process.env.SANITY_API_TOKEN?.substring(0, 10))
+
+  const res = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': contentType,
+      Authorization: `Bearer ${process.env.SANITY_API_TOKEN}`,
+    },
+    body: new Uint8Array(buffer),
+  })
 
   if (!res.ok) {
     const text = await res.text()
+    console.error('[DEBUG] uploadAsset failed response:', text.substring(0, 200))
     throw new Error(`Sanity asset upload failed: ${res.status} ${text}`)
   }
 
