@@ -88,12 +88,29 @@ export async function uploadAsset(
   filename: string,
   contentType: string
 ): Promise<{ _ref: string; _type: 'reference' }> {
-  const result = await writeClient.assets.upload('file', buffer, {
-    filename,
-    contentType,
+  // Use the Assets API directly with project ID in subdomain
+  const uploadUrl = `https://${projectId}.sanity.io/v2024-01-01/assets/files/${dataset}?filename=${encodeURIComponent(filename)}`
+  console.error('[DEBUG] uploadAsset URL:', uploadUrl)
+  console.error('[DEBUG] token prefix:', process.env.SANITY_API_TOKEN?.substring(0, 10))
+
+  const res = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': contentType,
+      Authorization: `Bearer ${process.env.SANITY_API_TOKEN}`,
+    },
+    body: buffer,
   })
+
+  if (!res.ok) {
+    const text = await res.text()
+    console.error('[DEBUG] uploadAsset failed response:', text.substring(0, 300))
+    throw new Error(`Sanity asset upload failed: ${res.status} ${text}`)
+  }
+
+  const data = await res.json()
   return {
-    _ref: result._id,
+    _ref: data._id ?? filename,
     _type: 'reference',
   }
 }
