@@ -89,29 +89,23 @@ export async function uploadAsset(
   filename: string,
   contentType: string
 ): Promise<{ _ref: string; _type: 'reference' }> {
-  // Use the Assets API directly with project ID in subdomain
-  const uploadUrl = `https://${projectId}.sanity.io/v2024-01-01/assets/files/${dataset}?filename=${encodeURIComponent(filename)}`
-  console.error('[DEBUG] uploadAsset URL:', uploadUrl)
+  // Use writeClient.assets.upload which handles the API correctly
+  console.error('[DEBUG] uploadAsset using writeClient.assets.upload, filename:', filename, 'contentType:', contentType, 'buffer length:', buffer.length)
   console.error('[DEBUG] token prefix:', process.env.SANITY_API_TOKEN?.substring(0, 10))
 
-  const res = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': contentType,
-      Authorization: `Bearer ${process.env.SANITY_API_TOKEN}`,
-    },
-    body: new Uint8Array(buffer),
-  })
-
-  if (!res.ok) {
-    const text = await res.text()
-    console.error('[DEBUG] uploadAsset failed response:', text.substring(0, 300))
-    throw new Error(`Sanity asset upload failed: ${res.status} ${text}`)
-  }
-
-  const data = await res.json()
-  return {
-    _ref: data._id ?? filename,
-    _type: 'reference',
+  try {
+    const asset = await writeClient.assets.upload('file', buffer, {
+      filename,
+      contentType,
+    })
+    console.error('[DEBUG] uploadAsset success, asset._id:', asset._id)
+    return {
+      _ref: asset._id,
+      _type: 'reference',
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[DEBUG] uploadAsset error:', msg)
+    throw err
   }
 }
