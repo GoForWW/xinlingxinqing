@@ -82,24 +82,36 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 5. Parse JSON response — MiniMax returns {"data": {"audio": "<base64>"}}
+    // 5. Read body bytes ONCE — use only once, never both
+    const rawBuffer = await ttsRes.arrayBuffer()
+    const rawBytes = Buffer.from(rawBuffer)
+
+    // Defensive: check minimum size before assuming it's audio
+    if (rawBytes.length < 1024) {
+      let detail = 'Response too small to be valid audio'
+      try {
+        const json = JSON.parse(rawBytes.toString('utf8'))
+        if (json.base_resp?.status_msg) {
+          detail = `MiniMax API error: ${json.base_resp.status_msg} (code ${json.base_resp.status_code})`
+        }
+      } catch {
+        detail = `Response is ${rawBytes.length} bytes, not audio`
+      }
+      console.error('[generate-audio] Invalid TTS response:', detail)
+      return NextResponse.json({ error: 'TTS generation failed', detail }, { status: 500 })
+    }
+
+    // 6. Parse JSON response — MiniMax returns {"data": {"audio": "<base64>"}}
     let audioBuffer: Buffer
     try {
-      const json = await ttsRes.json()
+      const json = JSON.parse(rawBytes.toString('utf8'))
       if (!json.data?.audio) {
         throw new Error(`No audio data in response: ${JSON.stringify(json).slice(0, 200)}`)
       }
       audioBuffer = Buffer.from(json.data.audio, 'base64')
-    } catch (err: any) {
-      // Fallback: try raw buffer if response wasn't JSON
-      const rawBuffer = Buffer.from(await ttsRes.arrayBuffer())
-      if (rawBuffer.length < 1024) {
-        return NextResponse.json(
-          { error: 'TTS response too small or unparseable', detail: err?.message },
-          { status: 500 }
-        )
-      }
-      audioBuffer = rawBuffer
+    } catch {
+      // Not JSON or missing data field — treat raw bytes as direct audio
+      audioBuffer = rawBytes
     }
 
     // 6. Upload to Sanity
