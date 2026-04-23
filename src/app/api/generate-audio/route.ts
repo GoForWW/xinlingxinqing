@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Call MiniMax TTS API
-    const ttsRes = await fetch('https://api.minimax.io/v1/t2a_v2', {
+    const ttsRes = await fetch('https://api.minimaxi.com/v1/t2a_v2', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.MINIMAX_API_KEY}`,
@@ -77,13 +77,32 @@ export async function POST(req: NextRequest) {
     if (!ttsRes.ok) {
       const errText = await ttsRes.text()
       return NextResponse.json(
-        { error: `MiniMax TTS failed: ${ttsRes.status} ${errText}` },
+        { error: `MiniMax TTS HTTP error: ${ttsRes.status}`, detail: errText },
         { status: 500 }
       )
     }
 
-    // 5. Get audio buffer and upload to Sanity
-    const audioBuffer = Buffer.from(await ttsRes.arrayBuffer())
+    // 5. Parse JSON response — MiniMax returns {"data": {"audio": "<base64>"}}
+    let audioBuffer: Buffer
+    try {
+      const json = await ttsRes.json()
+      if (!json.data?.audio) {
+        throw new Error(`No audio data in response: ${JSON.stringify(json).slice(0, 200)}`)
+      }
+      audioBuffer = Buffer.from(json.data.audio, 'base64')
+    } catch (err: any) {
+      // Fallback: try raw buffer if response wasn't JSON
+      const rawBuffer = Buffer.from(await ttsRes.arrayBuffer())
+      if (rawBuffer.length < 1024) {
+        return NextResponse.json(
+          { error: 'TTS response too small or unparseable', detail: err?.message },
+          { status: 500 }
+        )
+      }
+      audioBuffer = rawBuffer
+    }
+
+    // 6. Upload to Sanity
     const safeSlug = slug.replace(/[^a-z0-9-]/gi, '_')
     const audioRef = await uploadAsset(
       audioBuffer,
@@ -91,7 +110,7 @@ export async function POST(req: NextRequest) {
       'audio/mpeg'
     )
 
-    // 6. Update post with audio reference
+    // 7. Update post with audio reference
     await writeClient.patch(post._id).set({
       audio: {
         _type: 'file',

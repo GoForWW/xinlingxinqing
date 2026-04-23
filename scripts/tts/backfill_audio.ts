@@ -6,7 +6,7 @@
 import { client, writeClient, uploadAsset } from '../src/lib/sanity'
 
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY
-const MINIMAX_API_BASE = 'https://api.minimax.io/v1'
+const MINIMAX_API_BASE = 'https://api.minimaxi.com/v1'
 
 interface SanityPost {
   _id: string
