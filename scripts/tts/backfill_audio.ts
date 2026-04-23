@@ -6,7 +6,7 @@
 import { client, writeClient, uploadAsset } from '../../src/lib/sanity'
 
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY
-const MINIMAX_API_BASE = 'https://api.minimaxi.com/v1'
+const MINIMAX_API_BASE = 'https://api.minimaxi.com'
 
 interface SanityPost {
   _id: string
@@ -29,8 +29,69 @@ function extractText(body: any[]): string {
     .join('\n\n')
 }
 
+// Poll MiniMax async task until status is 'Success' or 'failed'
+async function waitForAsyncTask(taskId: string): Promise<{ fileId: string }> {
+  const MAX_WAIT = 60_000
+  const INTERVAL = 3_000
+  const start = Date.now()
+  while (Date.now() - start < MAX_WAIT) {
+    const res = await fetch(
+      `${MINIMAX_API_BASE}/v1/query/t2a_async_query_v2?task_id=${taskId}`,
+      {
+        headers: { Authorization: `Bearer ${MINIMAX_API_KEY}` },
+        signal: AbortSignal.timeout(15000),
+      }
+    )
+    if (!res.ok) throw new Error(`Poll HTTP ${res.status}`)
+    const json = await res.json()
+    if (json.status === 'Success') return { fileId: json.file_id }
+    if (json.status === 'failed' || json.status === 'expired') {
+      throw new Error(`Task ${json.status}: ${JSON.stringify(json)}`)
+    }
+    process.stdout.write('.')
+    await new Promise(r => setTimeout(r, INTERVAL))
+  }
+  throw new Error(`Timeout after ${MAX_WAIT}ms for task ${taskId}`)
+}
+
+// Download audio from MiniMax (returns tar archive containing the MP3)
+async function downloadFromMinimax(fileId: string): Promise<Buffer> {
+  const res = await fetch(
+    `${MINIMAX_API_BASE}/v1/files/retrieve_content?file_id=${fileId}`,
+    {
+      headers: { Authorization: `Bearer ${MINIMAX_API_KEY}` },
+      signal: AbortSignal.timeout(30000),
+    }
+  )
+  if (!res.ok) throw new Error(`Download HTTP ${res.status}`)
+  const chunks: Buffer[] = []
+  const reader = res.body!.getReader()
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    chunks.push(Buffer.from(value))
+  }
+  const tarBuffer = Buffer.concat(chunks)
+  // Parse tar — look for first .mp3 entry
+  const BLOCK = 512
+  let off = 0
+  while (off + BLOCK <= tarBuffer.length) {
+    const hdr = tarBuffer.slice(off, off + BLOCK)
+    if (hdr[0] === 0) break // end of tar
+    const name = hdr.slice(0, 100).toString('ascii').replace(/\0.*/, '')
+    const sizeOctal = hdr.slice(124, 136).toString('ascii').trim()
+    const fileSize = parseInt(sizeOctal, 8)
+    if (name.endsWith('.mp3') && fileSize > 0) {
+      return tarBuffer.slice(off + BLOCK, off + BLOCK + fileSize)
+    }
+    off += BLOCK + Math.ceil(fileSize / BLOCK) * BLOCK
+  }
+  throw new Error('MP3 not found in tar archive')
+}
+
 async function generateTTS(text: string): Promise<Buffer> {
-  const response = await fetch(`${MINIMAX_API_BASE}/t2a_v2`, {
+  // 1. Create async task
+  const createRes = await fetch(`${MINIMAX_API_BASE}/v1/t2a_async_v2`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${MINIMAX_API_KEY}`,
@@ -41,42 +102,39 @@ async function generateTTS(text: string): Promise<Buffer> {
       text,
       voice_setting: {
         voice_id: 'female-shaonv',
+        speed: 1.0,
+        pitch: 0,
+        volume: 1.0,
       },
       audio_setting: {
         format: 'mp3',
         sample_rate: 32000,
+        bitrate: 128000,
+        channels: 1,
       },
     }),
-    signal: AbortSignal.timeout(60000),
+    signal: AbortSignal.timeout(15000),
   })
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`MiniMax TTS API error: ${response.status} - ${error}`)
+  if (!createRes.ok) {
+    const err = await createRes.text()
+    throw new Error(`Task creation HTTP ${createRes.status}: ${err}`)
   }
 
-  const rawBuffer = await response.arrayBuffer()
-  const rawBytes = Buffer.from(rawBuffer)
-
-  if (rawBytes.length < 1024) {
-    throw new Error(`TTS response too small (${rawBytes.length} bytes)`)
+  const createJson = await createRes.json()
+  if (createJson.base_resp?.status_code !== 0) {
+    throw new Error(`Task creation failed: ${createJson.base_resp?.status_msg}`)
   }
 
-  // MiniMax returns {"data": {"audio": "<base64>"}}
-  let audioBuffer: Buffer
-  try {
-    const json = JSON.parse(rawBytes.toString('utf8'))
-    if (json.data?.audio) {
-      audioBuffer = Buffer.from(json.data.audio, 'base64')
-    } else {
-      throw new Error(`Unexpected JSON response: ${JSON.stringify(json).slice(0, 100)}`)
-    }
-  } catch {
-    // Fallback: treat raw bytes as direct audio (shouldn't happen with minimaxi.com)
-    audioBuffer = rawBytes
-  }
+  const taskId = String(createJson.task_id)
+  process.stdout.write(` [task=${taskId} waiting`)
 
-  return audioBuffer
+  // 2. Poll until ready
+  const { fileId } = await waitForAsyncTask(taskId)
+  process.stdout.write(' done]\n')
+
+  // 3. Download audio
+  return downloadFromMinimax(fileId)
 }
 
 async function backfill() {

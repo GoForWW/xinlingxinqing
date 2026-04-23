@@ -89,23 +89,17 @@ export async function uploadAsset(
   filename: string,
   contentType: string
 ): Promise<{ _ref: string; _type: 'reference' }> {
-  // Use writeClient.assets.upload which handles the API correctly
-  console.error('[DEBUG] uploadAsset using writeClient.assets.upload, filename:', filename, 'contentType:', contentType, 'buffer length:', buffer.length)
-  console.error('[DEBUG] token prefix:', process.env.SANITY_API_TOKEN?.substring(0, 10))
-
   try {
     const asset = await writeClient.assets.upload('file', buffer, {
       filename,
       contentType,
     })
-    console.error('[DEBUG] uploadAsset success, asset._id:', asset._id)
     return {
       _ref: asset._id,
       _type: 'reference',
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
-    console.error('[DEBUG] uploadAsset error:', msg)
     throw err
   }
 }
