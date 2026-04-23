@@ -137,6 +137,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'speech-2.8-hd',
         text,
+        language_boost: 'Chinese',
         voice_setting: {
           voice_id: 'female-shaonv',
           speed: 1.0,
