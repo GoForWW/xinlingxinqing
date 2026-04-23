@@ -124,7 +124,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             {post.audio?.asset?._ref && projectId && dataset && (
               <div className="mb-8">
                 <AudioPlayer
-                  src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.audio.asset._ref}`}
+                  src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.audio.asset._ref.replace('file-', '').replace('-mp3', '.mp3')}`}
                   title={post.title}
                 />
               </div>
