@@ -3,7 +3,7 @@
  * Usage: npx tsx scripts/tts/backfill_audio.ts
  */
 
-import { client, writeClient, uploadAsset } from '../src/lib/sanity'
+import { client, writeClient, uploadAsset } from '../../src/lib/sanity'
 
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY
 const MINIMAX_API_BASE = 'https://api.minimaxi.com/v1'
@@ -55,8 +55,28 @@ async function generateTTS(text: string): Promise<Buffer> {
     throw new Error(`MiniMax TTS API error: ${response.status} - ${error}`)
   }
 
-  const buffer = await response.arrayBuffer()
-  return Buffer.from(buffer)
+  const rawBuffer = await response.arrayBuffer()
+  const rawBytes = Buffer.from(rawBuffer)
+
+  if (rawBytes.length < 1024) {
+    throw new Error(`TTS response too small (${rawBytes.length} bytes)`)
+  }
+
+  // MiniMax returns {"data": {"audio": "<base64>"}}
+  let audioBuffer: Buffer
+  try {
+    const json = JSON.parse(rawBytes.toString('utf8'))
+    if (json.data?.audio) {
+      audioBuffer = Buffer.from(json.data.audio, 'base64')
+    } else {
+      throw new Error(`Unexpected JSON response: ${JSON.stringify(json).slice(0, 100)}`)
+    }
+  } catch {
+    // Fallback: treat raw bytes as direct audio (shouldn't happen with minimaxi.com)
+    audioBuffer = rawBytes
+  }
+
+  return audioBuffer
 }
 
 async function backfill() {
