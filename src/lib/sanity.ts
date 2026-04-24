@@ -56,6 +56,7 @@ export const queries = {
     mainImage,
     body,
     audio,
+    music,
     "categories": categories[]->{ _id, title, slug },
     "tags": tags,
     "author": author->{ name, image, bio }
