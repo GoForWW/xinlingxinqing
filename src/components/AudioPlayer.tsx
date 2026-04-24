@@ -121,11 +121,7 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
   if (hasError) {
-    return (
-      <div className="audio-player error" style={styles.container}>
-        <span style={styles.errorText}>音頻無法播放</span>
-      </div>
-    )
+    return null
   }
 
   return (
