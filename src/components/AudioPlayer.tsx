@@ -129,10 +129,10 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
       <audio
         ref={audioRef}
         src={src}
+        loop
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onError={() => setHasError(true)}
-        onEnded={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         preload="metadata"
