@@ -3,14 +3,12 @@ import { client, writeClient, uploadAsset } from '@/lib/sanity'
 
 export const runtime = 'nodejs'
 
-// MiniMax async TTS API base
+// MiniMax music generation API
 const MINIMAX_API_BASE = 'https://api.minimaxi.com'
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY!
-const MAX_POLL_WAIT_MS = 60_000
-const POLL_INTERVAL_MS = 3_000
 
-// Extract plain text from Sanity body blocks
-function extractText(body: any[]): string {
+// Extract meaningful text from body for music prompt generation
+function extractPromptText(body: any[]): string {
   if (!body) return ''
   return body
     .filter((block: any) => block._type === 'block')
@@ -22,72 +20,104 @@ function extractText(body: any[]): string {
     .join('\n\n')
 }
 
-// Poll MiniMax async task until status is 'Success' or 'failed'
-async function waitForAsyncTask(taskId: string): Promise<{ fileId: string }> {
-  const start = Date.now()
-  while (Date.now() - start < MAX_POLL_WAIT_MS) {
-    const res = await fetch(
-      `${MINIMAX_API_BASE}/v1/query/t2a_async_query_v2?task_id=${taskId}`,
-      {
-        headers: { Authorization: `Bearer ${MINIMAX_API_KEY}` },
-        signal: AbortSignal.timeout(15000),
-      }
-    )
-    if (!res.ok) {
-      throw new Error(`Polling failed: HTTP ${res.status}`)
-    }
-    const json = await res.json()
-    if (json.status === 'Success') {
-      return { fileId: json.file_id }
-    }
-    if (json.status === 'failed' || json.status === 'expired') {
-      throw new Error(`Async task ${json.status}: ${JSON.stringify(json)}`)
-    }
-    // Still processing — wait before next poll
-    await new Promise(r => setTimeout(r, POLL_INTERVAL_MS))
+// Generate music prompt from post content
+function generateMusicPrompt(title: string, text: string): string {
+  // Detect Chinese content ratio
+  const chineseCharCount = (text.match(/[\u4e00-\u9fff]/g) || []).length
+  const totalChars = text.replace(/\s/g, '').length
+  const chineseRatio = totalChars > 0 ? chineseCharCount / totalChars : 0
+
+  // Extract key themes from title
+  const themes = title
+    .split(/[,，、。.!！?？]/)
+    .filter((w) => w.trim().length > 1)
+    .slice(0, 5)
+
+  // Detect mood from content
+  let mood = 'calm'
+  let genre = 'ambient'
+
+  const lowerText = text.toLowerCase()
+  if (lowerText.includes('happy') || lowerText.includes('joy') || lowerText.includes('快樂') || lowerText.includes('幸福')) {
+    mood = 'warm'
+    genre = 'pop'
   }
-  throw new Error(`Timeout waiting for async task ${taskId} after ${MAX_POLL_WAIT_MS}ms`)
+  if (lowerText.includes('sad') || lowerText.includes('lonely') || lowerText.includes('孤獨') || lowerText.includes('悲傷')) {
+    mood = 'melancholic'
+    genre = 'acoustic'
+  }
+  if (lowerText.includes('nature') || lowerText.includes('peace') || lowerText.includes('自然') || lowerText.includes('平靜')) {
+    mood = 'serene'
+    genre = 'ambient'
+  }
+  if (lowerText.includes('work') || lowerText.includes('career') || lowerText.includes('工作') || lowerText.includes('事業')) {
+    mood = 'focused'
+    genre = 'instrumental'
+  }
+
+  const langBoost = chineseRatio > 0.3 ? 'Chinese style, ' : ''
+  const themeText = themes.join(', ')
+  return `${langBoost}${themeText || title}, ${genre}, ${mood} mood, instrumental, background music`
 }
 
-// Download audio from MiniMax async API (returns tar archive containing the MP3)
-async function downloadFromMinimax(fileId: string): Promise<Buffer> {
-  const res = await fetch(
-    `${MINIMAX_API_BASE}/v1/files/retrieve_content?file_id=${fileId}`,
-    {
-      headers: { Authorization: `Bearer ${MINIMAX_API_KEY}` },
-      signal: AbortSignal.timeout(30000),
-    }
-  )
-  if (!res.ok) {
-    throw new Error(`Failed to download audio: HTTP ${res.status}`)
+// Generate and download music from MiniMax
+async function generateMusic(prompt: string): Promise<Buffer> {
+  const payload = {
+    model: 'music-2.6',
+    prompt,
+    output_format: 'url',
+    lyrics: '[intro]', // instrumental workaround
+    audio_setting: {
+      format: 'mp3',
+      sample_rate: 44100,
+      bitrate: 256000,
+    },
   }
+
+  const createRes = await fetch(`${MINIMAX_API_BASE}/v1/music_generation`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${MINIMAX_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(300_000), // 5 min timeout
+  })
+
+  if (!createRes.ok) {
+    const err = await createRes.text()
+    throw new Error(`Music generation HTTP ${createRes.status}: ${err}`)
+  }
+
+  const json = await createRes.json()
+  if (json.base_resp?.status_code !== 0) {
+    throw new Error(`Music generation failed: ${json.base_resp?.status_msg}`)
+  }
+
+  if (json.data?.status !== 2 || !json.data?.audio) {
+    throw new Error(`Unexpected response: status=${json.data?.status}, hasAudio=${!!json.data?.audio}`)
+  }
+
+  const audioUrl = json.data.audio
+
+  // Download the audio from the returned URL
+  const audioRes = await fetch(audioUrl, {
+    signal: AbortSignal.timeout(120_000),
+  })
+
+  if (!audioRes.ok) {
+    throw new Error(`Download audio HTTP ${audioRes.status}`)
+  }
+
   const chunks: Buffer[] = []
-  const reader = res.body?.getReader()
-  if (!reader) throw new Error('No response body')
+  const reader = audioRes.body!.getReader()
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
     chunks.push(Buffer.from(value))
   }
-  const tarBuffer = Buffer.concat(chunks)
-  // Parse tar archive — MiniMax returns a tar with one MP3 file
-  // Tar format: 512-byte header blocks + data blocks, null-terminated at end with 2 empty blocks
-  const CHUNK_SIZE = 512
-  let offset = 0
-  while (offset + CHUNK_SIZE <= tarBuffer.length) {
-    const header = tarBuffer.slice(offset, offset + CHUNK_SIZE)
-    if (header[0] === 0) break // End of tar (null block)
-    // Parse tar header fields (octal)
-    const name = header.slice(0, 100).toString('ascii').replace(/\0.*/, '')
-    const sizeOctal = header.slice(124, 124 + 12).toString('ascii').trim()
-    const fileSize = parseInt(sizeOctal, 8)
-    if (name.endsWith('.mp3') && fileSize > 0) {
-      const dataOffset = offset + CHUNK_SIZE
-      return tarBuffer.slice(dataOffset, dataOffset + fileSize)
-    }
-    offset += CHUNK_SIZE + Math.ceil(fileSize / CHUNK_SIZE) * CHUNK_SIZE
-  }
-  throw new Error('Could not find MP3 file in MiniMax tar archive')
+
+  return Buffer.concat(chunks)
 }
 
 export async function POST(req: NextRequest) {
@@ -96,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Fetch post by slug
     const post = await client.fetch(
-      `*[_type == "post" && slug.current == $slug][0]{ _id, title, body, audio }`,
+      `*[_type == "post" && slug.current == $slug][0]{ _id, title, body, music }`,
       { slug }
     )
 
@@ -104,106 +134,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 })
     }
 
-    // 2. Skip if audio already exists
-    if (post.audio?.asset?._ref) {
+    // 2. Skip if music already exists
+    if (post.music?.asset?._ref) {
       return NextResponse.json({
         success: true,
-        message: 'Audio already exists',
-        audioRef: post.audio.asset._ref,
+        message: 'Music already exists',
+        musicRef: post.music.asset._ref,
       })
     }
 
-    // 3. Extract text from body
-    const text = extractText(post.body)
+    // 3. Extract text from body for prompt
+    const text = extractPromptText(post.body)
     if (!text.trim()) {
       return NextResponse.json({ error: 'No text content in post body' }, { status: 400 })
     }
 
-    // 3b. Validate text length (MiniMax TTS limit ~5000 chars)
-    if (text.length > 5000) {
-      return NextResponse.json(
-        { error: 'Text too long for TTS generation (max 5000 characters)' },
-        { status: 400 }
-      )
-    }
+    // 4. Generate music prompt
+    const prompt = generateMusicPrompt(post.title, text)
 
-    // 4. Create async TTS task
-    const createRes = await fetch(`${MINIMAX_API_BASE}/v1/t2a_async_v2`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${MINIMAX_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'speech-2.8-hd',
-        text,
-        language_boost: 'Chinese',
-        voice_setting: {
-          voice_id: 'female-shaonv',
-          speed: 1.0,
-          pitch: 0,
-          volume: 1.0,
-        },
-        audio_setting: {
-          format: 'mp3',
-          sample_rate: 32000,
-          bitrate: 128000,
-          channels: 1,
-        },
-      }),
-      signal: AbortSignal.timeout(15000),
-    })
+    // 5. Generate music via MiniMax
+    const musicBuffer = await generateMusic(prompt)
 
-    if (!createRes.ok) {
-      const errText = await createRes.text()
-      return NextResponse.json(
-        { error: `MiniMax async TTS HTTP error: ${createRes.status}`, detail: errText },
-        { status: 500 }
-      )
-    }
-
-    const createJson = await createRes.json()
-    if (createJson.base_resp?.status_code !== 0) {
-      return NextResponse.json(
-        {
-          error: 'MiniMax async task creation failed',
-          detail: createJson.base_resp?.status_msg || JSON.stringify(createJson),
-        },
-        { status: 500 }
-      )
-    }
-
-    const taskId = String(createJson.task_id)
-
-    // 5. Poll until audio is ready
-    const { fileId } = await waitForAsyncTask(taskId)
-
-    // 6. Download the audio (wrapped in tar archive)
-    const audioBuffer = await downloadFromMinimax(fileId)
-
-    // 7. Upload to Sanity
+    // 6. Upload to Sanity (music field)
     const safeSlug = slug.replace(/[^a-z0-9-]/gi, '_')
-    const audioRef = await uploadAsset(
-      audioBuffer,
-      `${safeSlug}-audio.mp3`,
+    const musicRef = await uploadAsset(
+      musicBuffer,
+      `${safeSlug}-music.mp3`,
       'audio/mpeg'
     )
 
-    // 8. Update post with audio reference
+    // 7. Update post with music reference
     await writeClient.patch(post._id).set({
-      audio: {
+      music: {
         _type: 'file',
-        asset: audioRef,
+        asset: musicRef,
       },
     }).commit()
 
     return NextResponse.json({
       success: true,
-      audioRef: audioRef._ref,
-      size: audioBuffer.length,
+      musicRef: musicRef._ref,
+      size: musicBuffer.length,
     })
   } catch (err: any) {
-    console.error('generate-audio error:', err)
-    return NextResponse.json({ error: 'TTS generation failed', detail: err.message }, { status: 500 })
+    console.error('generate-music error:', err)
+    return NextResponse.json({ error: 'Music generation failed', detail: err.message }, { status: 500 })
   }
 }

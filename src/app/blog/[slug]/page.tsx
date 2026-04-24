@@ -130,6 +130,16 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               </div>
             )}
 
+            {/* Music Player */}
+            {post.music?.asset?._ref && projectId && dataset && (
+              <div className="mb-8">
+                <AudioPlayer
+                  src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.music.asset._ref.replace('file-', '').replace('-mp3', '.mp3')}`}
+                  title={`${post.title} - 背景音樂`}
+                />
+              </div>
+            )}
+
             {/* Excerpt */}
             {post.excerpt && (
               <p className="text-lg text-[#6B7A64] leading-relaxed mb-8 border-l-4 border-[#6B7A64]/30 pl-4">

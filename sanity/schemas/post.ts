@@ -98,6 +98,15 @@ export default defineType({
       },
       description: '自動從文章正文生成的語音版本',
     }),
+    defineField({
+      name: 'music',
+      title: '背景音樂',
+      type: 'file',
+      options: {
+        accept: 'audio/mp3,audio/mpeg',
+      },
+      description: '自動從文章內容生成的背景音樂',
+    }),
   ],
   preview: {
     select: {

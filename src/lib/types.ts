@@ -10,6 +10,7 @@ export interface Post {
   tags?: string[]
   author?: Author
   audio?: SanityFile
+  music?: SanityFile
 }
 
 export interface Category {
