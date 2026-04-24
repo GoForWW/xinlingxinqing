@@ -14,8 +14,8 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
   const [duration, setDuration] = useState(0)
   const [hasError, setHasError] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [volume, setVolume] = useState(1)
-  const [prevVolume, setPrevVolume] = useState(1)
+  const [volume, setVolume] = useState(0.3)
+  const [prevVolume, setPrevVolume] = useState(0.3)
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value)
@@ -49,6 +49,13 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
       if (audioRef.current) {
         audioRef.current.pause()
       }
+    }
+  }, [])
+
+  // Set initial volume to 0.3 (30%) on mount
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.3
     }
   }, [])
 
@@ -128,7 +135,7 @@ export default function AudioPlayer({ src, title = '音頻' }: AudioPlayerProps)
         src={src}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onError={handleError}
+        onError={() => setHasError(true)}
         onEnded={() => setIsPlaying(false)}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
