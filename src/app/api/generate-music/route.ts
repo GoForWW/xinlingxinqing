@@ -57,7 +57,7 @@ function generateMusicPrompt(title: string, text: string): string {
 
   const langBoost = chineseRatio > 0.3 ? 'Chinese style, ' : ''
   const themeText = themes.join(', ')
-  return `${langBoost}${themeText || title}, ${genre}, ${mood} mood, instrumental, background music`
+  return `${langBoost}${themeText || title}, ${genre}, ${mood} mood, purely instrumental, no vocals, no singing, background music`
 }
 
 // Generate and download music from MiniMax
@@ -66,7 +66,7 @@ async function generateMusic(prompt: string): Promise<Buffer> {
     model: 'music-2.6',
     prompt,
     output_format: 'url',
-    lyrics: '[intro]', // instrumental workaround
+    lyrics: 'instrumental', // no vocals, purely instrumental music
     audio_setting: {
       format: 'mp3',
       sample_rate: 44100,
