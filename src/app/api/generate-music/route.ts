@@ -66,7 +66,8 @@ async function generateMusic(prompt: string): Promise<Buffer> {
     model: 'music-2.6',
     prompt,
     output_format: 'url',
-    lyrics: 'instrumental', // no vocals, purely instrumental music
+    is_instrumental: true,
+    lyrics: '',
     audio_setting: {
       format: 'mp3',
       sample_rate: 44100,
