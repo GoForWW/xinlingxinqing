@@ -11,12 +11,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
   }
 
+  // DEBUG: Log all headers and error details
+  const headersObj: Record<string, string | string[] | undefined> = {}
+  req.headers.forEach((value, key) => {
+    headersObj[key] = value
+  })
+  console.log('DEBUG webhook headers:', JSON.stringify({
+    sanitySignature: headersObj['sanity-webhook-signature'],
+    contentType: headersObj['content-type'],
+    allHeaders: Object.keys(headersObj)
+  }))
+  console.log('DEBUG body preview:', body.substring(0, 200))
+
   try {
-    await assertValidRequest({ headers: req.headers as unknown as Record<string, string | string[] | undefined>, body }, SECRET)
+    await assertValidRequest({ headers: headersObj, body }, SECRET)
+    console.log('DEBUG: Signature verification passed!')
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Invalid signature'
-    console.error('Webhook signature verification failed:', message)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const errObj = err instanceof Error ? { message: err.message, name: err.name, stack: err.stack } : err
+    console.error('DEBUG webhook signature error:', JSON.stringify(errObj))
+    return NextResponse.json({ error: 'Unauthorized', debug: err instanceof Error ? err.message : String(err) }, { status: 401 })
   }
 
   let payload
