@@ -4,6 +4,8 @@ import { getAllPosts, getAllCategories } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
 
+export const revalidate = 60 // ISR: revalidate every 60s to pick up new posts
+
 function formatDate(dateString: string) {
   const date = new Date(dateString)
   const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
@@ -11,6 +13,8 @@ function formatDate(dateString: string) {
 }
 
 export default async function BlogPage() {
+  // Force dynamic rendering on each request for development
+  // In production, 'revalidate = 60' above handles fresh data
   const posts = await getAllPosts()
   const categories = await getAllCategories()
 

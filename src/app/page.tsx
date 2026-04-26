@@ -8,6 +8,8 @@ import Footer from '@/components/Footer'
 import { urlFor } from '@/lib/sanity'
 import type { Post, Category } from '@/lib/types'
 
+export const revalidate = 60 // ISR: revalidate every 60s to pick up new posts
+
 // Format date to Chinese format
 function formatDate(dateString: string) {
   const date = new Date(dateString)
