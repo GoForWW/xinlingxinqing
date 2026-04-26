@@ -95,7 +95,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <div className="px-8 md:px-12 pb-8">
+          <div className="px-8 md:px-12 pt-8 pb-8">
             {/* Meta */}
             <div className="flex items-center gap-3 mb-4">
               {post.categories?.map((cat) => (
