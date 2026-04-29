@@ -5,7 +5,11 @@ import { notFound } from 'next/navigation'
 import { getPostBySlug, getAllPostSlugs, getAllCategories, getRelatedPosts, getAdjacentPosts } from '@/lib/api'
 import { getReadingTimeObject } from '@/lib/readingTime'
 import { urlFor, projectId, dataset } from '@/lib/sanity'
+import { extractHeadings } from '@/lib/toc'
 import type { Post } from '@/lib/types'
+import MobileNav from '@/components/MobileNav'
+import TableOfContents from '@/components/TableOfContents'
+import Breadcrumbs from '@/components/Breadcrumbs'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -50,7 +54,7 @@ function formatDate(dateString: string) {
   return `${date.getFullYear()}年${months[date.getMonth()]}${date.getDate()}日`
 }
 
-export const revalidate = 60 // ISR: revalidate page every 60s to pick up new audio from Sanity
+export const revalidate = 60
 
 export async function generateStaticParams() {
   const slugs = await getAllPostSlugs()
@@ -72,6 +76,22 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const categoryIds = post.categories?.map((c: any) => c._ref) || []
   const relatedPosts = await getRelatedPosts(slug, categoryIds, 3)
   const { prev, next } = await getAdjacentPosts(slug)
+
+  // Extract headings for TOC
+  const headings = extractHeadings(post.body || [])
+
+  // Build breadcrumbs
+  const breadcrumbItems = [
+    { label: '首頁', href: '/' },
+    { label: '全部文章', href: '/blog' },
+  ]
+  if (post.categories?.[0]) {
+    breadcrumbItems.push({
+      label: post.categories[0].title,
+      href: `/category/${post.categories[0].slug.current}`,
+    })
+  }
+  breadcrumbItems.push({ label: post.title, href: `/blog/${slug}` })
 
   return (
     <div className="min-h-screen bg-[#F7F4EF]">
@@ -100,13 +120,15 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 </Link>
               ))}
             </nav>
+            <MobileNav categories={categories} />
           </div>
         </div>
       </header>
 
-      {/* Article */}
-      <main className="max-w-3xl mx-auto px-4 py-12">
-        {/* Back link */}
+      {/* Article with TOC */}
+      <main className="max-w-6xl mx-auto px-4 py-12">
+        <Breadcrumbs items={breadcrumbItems} />
+
         <Link
           href="/blog"
           className="inline-flex items-center gap-2 text-[#6B7A64] hover:underline mb-8"
@@ -114,166 +136,181 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           ← 返回文章列表
         </Link>
 
-        {/* Post header */}
-        <article className="bg-white rounded-2xl overflow-hidden shadow-sm">
-          {post.mainImage && (
-            <div className="relative h-64 md:h-96 mb-8">
-              <Image
-                src={urlFor(post.mainImage).width(1200).height(800).url()}
-                alt={post.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-          )}
-
-          <div className="px-8 md:px-12 pt-8 pb-8">
-            {/* Meta */}
-            <div className="flex items-center gap-3 mb-4">
-              {post.categories?.map((cat) => (
-                <Link
-                  key={cat._id}
-                  href={`/category/${cat.slug.current}`}
-                  className="px-3 py-1 bg-[#6B7A64]/10 text-[#6B7A64] text-sm rounded-full hover:bg-[#6B7A64] hover:text-white transition-colors"
-                >
-                  {cat.title}
-                </Link>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-4 text-sm text-[#6B7A64] mb-6">
-              <span>{formatDate(post.publishedAt)}</span>
-              <span className="text-[#6B7A64]/70">· {readingTime.text}</span>
-              {post.author && <span>作者：{post.author.name}</span>}
-            </div>
-
-            {/* Title */}
-            <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#4A5568] mb-6">
-              {post.title}
-            </h1>
-
-            {/* Audio Player */}
-            {post.audio?.asset?._ref && projectId && dataset && (
-              <div className="mb-8">
-                <AudioPlayer
-                  src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.audio.asset._ref.replace('file-', '').replace('-mp3', '.mp3')}`}
-                  title={post.title}
+        <div className="flex gap-8 justify-center items-start">
+          {/* Main content */}
+          <article className="flex-1 max-w-3xl min-w-0 bg-white rounded-2xl overflow-hidden shadow-sm">
+            {post.mainImage && (
+              <div className="relative h-64 md:h-96">
+                <Image
+                  src={urlFor(post.mainImage).width(1200).height(800).url()}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  priority
                 />
               </div>
             )}
 
-            {/* Music Player */}
-            {post.music?.asset?._ref && projectId && dataset && (
-              <div className="mb-8">
-                <AudioPlayer
-                  src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.music.asset._ref.replace('file-', '').replace('-mp3', '.mp3')}`}
-                  title={`${post.title} - 背景音樂`}
-                />
+            <div className="px-8 md:px-12 pt-8 pb-8">
+              {/* Mobile TOC (positioned inline, before content) */}
+              <TableOfContents headings={headings} />
+
+              {/* Meta */}
+              <div className="flex items-center gap-3 mb-4">
+                {post.categories?.map((cat) => (
+                  <Link
+                    key={cat._id}
+                    href={`/category/${cat.slug.current}`}
+                    className="px-3 py-1 bg-[#6B7A64]/10 text-[#6B7A64] text-sm rounded-full hover:bg-[#6B7A64] hover:text-white transition-colors"
+                  >
+                    {cat.title}
+                  </Link>
+                ))}
               </div>
-            )}
 
-            {/* Excerpt */}
-            {post.excerpt && (
-              <p className="text-lg text-[#6B7A64] leading-relaxed mb-8 border-l-4 border-[#6B7A64]/30 pl-4">
-                {post.excerpt}
-              </p>
-            )}
-
-            {/* Body */}
-            {post.body && (
-              <div className="prose prose-slate max-w-none">
-                {post.body.map((block: any, index: number) => {
-                  if (block._type === 'block') {
-                    const text = block.children?.map((child: any) => child.text).join('') || ''
-                    
-                    switch (block.style) {
-                      case 'h2':
-                        return (
-                          <h2 key={index} className="text-2xl font-serif font-bold text-[#4A5568] mt-8 mb-4">
-                            {text}
-                          </h2>
-                        )
-                      case 'h3':
-                        return (
-                          <h3 key={index} className="text-xl font-serif font-semibold text-[#4A5568] mt-6 mb-3">
-                            {text}
-                          </h3>
-                        )
-                      case 'blockquote':
-                        return (
-                          <blockquote key={index} className="border-l-4 border-[#6B7A64] pl-4 my-4 text-[#6B7A64] italic">
-                            {text}
-                          </blockquote>
-                        )
-                      default:
-                        return text ? (
-                          <p key={index} className="text-[#4A5568] leading-relaxed mb-4">
-                            {block.children?.map((child: any, ci: number) => {
-                              const childText = child.text || ''
-                              const marks = child.marks || []
-                              
-                              let element: React.ReactNode = childText
-                              if (marks.includes('strong')) {
-                                element = <strong key={ci}>{childText}</strong>
-                              }
-                              if (marks.includes('em')) {
-                                element = marks.includes('strong') ? (
-                                  <strong><em>{childText}</em></strong>
-                                ) : (
-                                  <em>{childText}</em>
-                                )
-                              }
-                              
-                              return element
-                            })}
-                          </p>
-                        ) : null
-                    }
-                  }
-                  
-                  if (block._type === 'image' && block.asset) {
-                    return (
-                      <div key={index} className="my-8 relative h-64 md:h-96">
-                        <Image
-                          src={urlFor(block).width(1200).height(800).url()}
-                          alt=""
-                          fill
-                          className="object-cover rounded-lg"
-                        />
-                      </div>
-                    )
-                  }
-                  
-                  return null
-                })}
+              <div className="flex items-center gap-4 text-sm text-[#6B7A64] mb-6">
+                <span>{formatDate(post.publishedAt)}</span>
+                <span className="text-[#6B7A64]/70">· {readingTime.text}</span>
+                {post.author && <span>作者：{post.author.name}</span>}
               </div>
-            )}
 
-            {/* Social Share */}
-            <SocialShare title={post.title} url={typeof window !== 'undefined' ? window.location.href : ''} />
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-[#4A5568] mb-6">
+                {post.title}
+              </h1>
 
-            <RelatedPosts posts={relatedPosts} />
-
-            <PrevNextNav prev={prev} next={next} />
-
-            {/* Tags */}
-            {post.tags && post.tags.length > 0 && (
-              <div className="mt-8 pt-8 border-t border-[#E8E4DD]">
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-sm text-[#6B7A64]/70 bg-[#F7F4EF] px-3 py-1 rounded-full"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
+              {/* Audio Player */}
+              {post.audio?.asset?._ref && projectId && dataset && (
+                <div className="mb-8">
+                  <AudioPlayer
+                    src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.audio.asset._ref.replace('file-', '').replace('-mp3', '.mp3')}`}
+                    title={post.title}
+                  />
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Music Player */}
+              {post.music?.asset?._ref && projectId && dataset && (
+                <div className="mb-8">
+                  <AudioPlayer
+                    src={`https://cdn.sanity.io/files/${projectId}/${dataset}/${post.music.asset._ref.replace('file-', '').replace('-mp3', '.mp3')}`}
+                    title={`${post.title} - 背景音樂`}
+                  />
+                </div>
+              )}
+
+              {/* Excerpt */}
+              {post.excerpt && (
+                <p className="text-lg text-[#6B7A64] leading-relaxed mb-8 border-l-4 border-[#6B7A64]/30 pl-4">
+                  {post.excerpt}
+                </p>
+              )}
+
+              {/* Body */}
+              {post.body && (
+                <div className="prose prose-slate max-w-none">
+                  {post.body.map((block: any, index: number) => {
+                    if (block._type === 'block') {
+                      const text = block.children?.map((child: any) => child.text).join('') || ''
+
+                      switch (block.style) {
+                        case 'h2': {
+                          const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u4e00-\u9fff\-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
+                          return (
+                            <h2 key={index} id={id} className="text-2xl font-serif font-bold text-[#4A5568] mt-8 mb-4 scroll-mt-24">
+                              {text}
+                            </h2>
+                          )
+                        }
+                        case 'h3': {
+                          const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\u4e00-\u9fff\-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
+                          return (
+                            <h3 key={index} id={id} className="text-xl font-serif font-semibold text-[#4A5568] mt-6 mb-3 scroll-mt-24">
+                              {text}
+                            </h3>
+                          )
+                        }
+                        case 'blockquote':
+                          return (
+                            <blockquote key={index} className="border-l-4 border-[#6B7A64] pl-4 my-4 text-[#6B7A64] italic">
+                              {text}
+                            </blockquote>
+                          )
+                        default:
+                          return text ? (
+                            <p key={index} className="text-[#4A5568] leading-relaxed mb-4">
+                              {block.children?.map((child: any, ci: number) => {
+                                const childText = child.text || ''
+                                const marks = child.marks || []
+
+                                let element: React.ReactNode = childText
+                                if (marks.includes('strong')) {
+                                  element = <strong key={ci}>{childText}</strong>
+                                }
+                                if (marks.includes('em')) {
+                                  element = marks.includes('strong') ? (
+                                    <strong><em>{childText}</em></strong>
+                                  ) : (
+                                    <em>{childText}</em>
+                                  )
+                                }
+
+                                return element
+                              })}
+                            </p>
+                          ) : null
+                      }
+                    }
+
+                    if (block._type === 'image' && block.asset) {
+                      return (
+                        <div key={index} className="my-8 relative h-64 md:h-96">
+                          <Image
+                            src={urlFor(block).width(1200).height(800).url()}
+                            alt=""
+                            fill
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
+                      )
+                    }
+
+                    return null
+                  })}
+                </div>
+              )}
+
+              {/* Social Share */}
+              <SocialShare title={post.title} url={typeof window !== 'undefined' ? window.location.href : ''} />
+
+              <RelatedPosts posts={relatedPosts} />
+
+              <PrevNextNav prev={prev} next={next} />
+
+              {/* Tags */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-[#E8E4DD]">
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-sm text-[#6B7A64]/70 bg-[#F7F4EF] px-3 py-1 rounded-full"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </article>
+
+          {/* Desktop TOC sidebar - only rendered on xl+ */}
+          <div className="hidden xl:block w-64 flex-shrink-0">
+            <div className="sticky top-24">
+              <TableOfContents headings={headings} variant="desktop" />
+            </div>
           </div>
-        </article>
+        </div>
 
         {/* Back to blog */}
         <div className="text-center mt-8">

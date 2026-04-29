@@ -1,8 +1,29 @@
 import { client, queries } from './sanity'
 import type { Post, Category } from './types'
 
+export const POSTS_PER_PAGE = 9
+
 export async function getAllPosts(): Promise<Post[]> {
   return client.fetch(queries.allPosts)
+}
+
+export async function getAllPostsPaginated(page: number = 1, limit: number = POSTS_PER_PAGE): Promise<{ posts: Post[]; total: number }> {
+  const offset = (page - 1) * limit
+  const params = { offset, limit: offset + limit }
+
+  const [posts, totalArr] = await Promise.all([
+    client.fetch<Post[]>(
+      `*[_type == "post"] | order(publishedAt desc) [$offset...$limit] {
+        _id, title, slug, excerpt, publishedAt, mainImage, categories, tags
+      }`,
+      { ...params, offset: Number(offset), limit: Number(params.limit) }
+    ),
+    client.fetch<{ count: number }[]>(
+      `{ "count": count(*[_type == "post"]) }`
+    ),
+  ])
+
+  return { posts, total: totalArr[0]?.count || 0 }
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
@@ -15,6 +36,26 @@ export async function getAllCategories(): Promise<Category[]> {
 
 export async function getPostsByCategory(categorySlug: string): Promise<Post[]> {
   return client.fetch(queries.postsByCategory, { categorySlug })
+}
+
+export async function getPostsByCategoryPaginated(categorySlug: string, page: number = 1, limit: number = POSTS_PER_PAGE): Promise<{ posts: Post[]; total: number }> {
+  const offset = (page - 1) * limit
+
+  const [categoryResult, posts, totalArr] = await Promise.all([
+    client.fetch<Category[]>(queries.allCategories),
+    client.fetch<Post[]>(
+      `*[_type == "post" && references(*[_type == "category" && slug.current == $categorySlug]._id)] | order(publishedAt desc) [$offset...$limit] {
+        _id, title, slug, excerpt, publishedAt, mainImage, categories, tags
+      }`,
+      { categorySlug, offset: Number(offset), limit: Number(offset + limit) }
+    ),
+    client.fetch<{ count: number }[]>(
+      `{ "count": count(*[_type == "post" && references(*[_type == "category" && slug.current == $categorySlug]._id)]) }`,
+      { categorySlug }
+    ),
+  ])
+
+  return { posts, total: totalArr[0]?.count || 0 }
 }
 
 export async function getAllPostSlugs(): Promise<string[]> {

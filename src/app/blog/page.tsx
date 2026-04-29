@@ -1,9 +1,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getAllPosts, getAllCategories } from '@/lib/api'
+import { getAllPostsPaginated, getAllCategories, POSTS_PER_PAGE } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
+import MobileNav from '@/components/MobileNav'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const revalidate = 60 // ISR: revalidate every 60s to pick up new posts
+export const revalidate = 60
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)
@@ -27,11 +28,69 @@ function formatDate(dateString: string) {
   return `${date.getFullYear()}年${months[date.getMonth()]}${date.getDate()}日`
 }
 
-export default async function BlogPage() {
-  // Force dynamic rendering on each request for development
-  // In production, 'revalidate = 60' above handles fresh data
-  const posts = await getAllPosts()
+function Pagination({ currentPage, totalPages }: { currentPage: number; totalPages: number }) {
+  if (totalPages <= 1) return null
+
+  return (
+    <nav className="flex items-center justify-center gap-2 mt-12" aria-label="分頁導航">
+      {/* Previous */}
+      {currentPage > 1 ? (
+        <Link
+          href={currentPage === 2 ? '/blog' : `/blog?page=${currentPage - 1}`}
+          className="px-4 py-2 rounded-lg bg-white text-[#4A5568] border border-[#E8E4DD] hover:bg-[#6B7A64] hover:text-white hover:border-[#6B7A64] transition-all text-sm"
+        >
+          ← 上一頁
+        </Link>
+      ) : (
+        <span className="px-4 py-2 rounded-lg bg-white text-[#6B7A64]/30 border border-[#E8E4DD] text-sm cursor-not-allowed">
+          ← 上一頁
+        </span>
+      )}
+
+      {/* Page numbers */}
+      <div className="flex items-center gap-1">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <Link
+            key={page}
+            href={page === 1 ? '/blog' : `/blog?page=${page}`}
+            className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
+              page === currentPage
+                ? 'bg-[#6B7A64] text-white'
+                : 'bg-white text-[#4A5568] border border-[#E8E4DD] hover:bg-[#6B7A64]/10'
+            }`}
+          >
+            {page}
+          </Link>
+        ))}
+      </div>
+
+      {/* Next */}
+      {currentPage < totalPages ? (
+        <Link
+          href={`/blog?page=${currentPage + 1}`}
+          className="px-4 py-2 rounded-lg bg-white text-[#4A5568] border border-[#E8E4DD] hover:bg-[#6B7A64] hover:text-white hover:border-[#6B7A64] transition-all text-sm"
+        >
+          下一頁 →
+        </Link>
+      ) : (
+        <span className="px-4 py-2 rounded-lg bg-white text-[#6B7A64]/30 border border-[#E8E4DD] text-sm cursor-not-allowed">
+          下一頁 →
+        </span>
+      )}
+    </nav>
+  )
+}
+
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const params = await searchParams
+  const currentPage = Math.max(1, parseInt(params.page || '1', 10) || 1)
+  const { posts, total } = await getAllPostsPaginated(currentPage, POSTS_PER_PAGE)
   const categories = await getAllCategories()
+  const totalPages = Math.ceil(total / POSTS_PER_PAGE)
 
   return (
     <div className="min-h-screen bg-[#F7F4EF]">
@@ -62,13 +121,17 @@ export default async function BlogPage() {
                 </Link>
               ))}
             </nav>
+            <MobileNav categories={categories} />
           </div>
         </div>
       </header>
 
       {/* Blog Posts */}
       <main className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-serif font-bold text-[#4A5568] mb-8">全部文章</h2>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-3xl font-serif font-bold text-[#4A5568]">全部文章</h2>
+          <span className="text-sm text-[#6B7A64]">共 {total} 篇</span>
+        </div>
 
         {categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-8">
@@ -154,6 +217,9 @@ export default async function BlogPage() {
             <p className="text-sm text-[#6B7A64]/70 mt-2">即將推出更多內容，敬請期待</p>
           </div>
         )}
+
+        {/* Pagination */}
+        <Pagination currentPage={currentPage} totalPages={totalPages} />
       </main>
 
       {/* Footer */}

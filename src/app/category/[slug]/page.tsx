@@ -2,9 +2,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getAllCategories, getPostsByCategory, getAllPosts } from '@/lib/api'
+import { getAllCategories, getPostsByCategoryPaginated, POSTS_PER_PAGE } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
+import MobileNav from '@/components/MobileNav'
 
 export const revalidate = 60
 
@@ -34,12 +35,66 @@ function formatDate(dateString: string) {
   return `${date.getFullYear()}年${months[date.getMonth()]}${date.getDate()}日`
 }
 
+function Pagination({ currentPage, totalPages, baseUrl }: { currentPage: number; totalPages: number; baseUrl: string }) {
+  if (totalPages <= 1) return null
+
+  return (
+    <nav className="flex items-center justify-center gap-2 mt-12" aria-label="分頁導航">
+      {currentPage > 1 ? (
+        <Link
+          href={currentPage === 2 ? baseUrl : `${baseUrl}?page=${currentPage - 1}`}
+          className="px-4 py-2 rounded-lg bg-white text-[#4A5568] border border-[#E8E4DD] hover:bg-[#6B7A64] hover:text-white hover:border-[#6B7A64] transition-all text-sm"
+        >
+          ← 上一頁
+        </Link>
+      ) : (
+        <span className="px-4 py-2 rounded-lg bg-white text-[#6B7A64]/30 border border-[#E8E4DD] text-sm cursor-not-allowed">
+          ← 上一頁
+        </span>
+      )}
+
+      <div className="flex items-center gap-1">
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <Link
+            key={page}
+            href={page === 1 ? baseUrl : `${baseUrl}?page=${page}`}
+            className={`w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
+              page === currentPage
+                ? 'bg-[#6B7A64] text-white'
+                : 'bg-white text-[#4A5568] border border-[#E8E4DD] hover:bg-[#6B7A64]/10'
+            }`}
+          >
+            {page}
+          </Link>
+        ))}
+      </div>
+
+      {currentPage < totalPages ? (
+        <Link
+          href={`${baseUrl}?page=${currentPage + 1}`}
+          className="px-4 py-2 rounded-lg bg-white text-[#4A5568] border border-[#E8E4DD] hover:bg-[#6B7A64] hover:text-white hover:border-[#6B7A64] transition-all text-sm"
+        >
+          下一頁 →
+        </Link>
+      ) : (
+        <span className="px-4 py-2 rounded-lg bg-white text-[#6B7A64]/30 border border-[#E8E4DD] text-sm cursor-not-allowed">
+          下一頁 →
+        </span>
+      )}
+    </nav>
+  )
+}
+
 export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>
+  searchParams: Promise<{ page?: string }>
 }) {
   const { slug } = await params
+  const searchParamsResolved = await searchParams
+  const currentPage = Math.max(1, parseInt(searchParamsResolved.page || '1', 10) || 1)
   const categories = await getAllCategories()
   const category = categories.find((c) => c.slug.current === slug)
 
@@ -47,7 +102,8 @@ export default async function CategoryPage({
     notFound()
   }
 
-  const posts = await getPostsByCategory(slug)
+  const { posts, total } = await getPostsByCategoryPaginated(slug, currentPage, POSTS_PER_PAGE)
+  const totalPages = Math.ceil(total / POSTS_PER_PAGE)
 
   return (
     <div className="min-h-screen bg-[#F7F4EF]">
@@ -78,6 +134,7 @@ export default async function CategoryPage({
                 </Link>
               ))}
             </nav>
+            <MobileNav categories={categories} />
           </div>
         </div>
       </header>
@@ -88,7 +145,7 @@ export default async function CategoryPage({
           <h2 className="text-3xl font-serif font-bold text-[#4A5568] mb-2">
             {category.title}
           </h2>
-          <p className="text-[#6B7A64]">共 {posts.length} 篇文章</p>
+          <p className="text-[#6B7A64]">共 {total} 篇文章</p>
         </div>
 
         {/* Category Filter Pills */}
@@ -184,6 +241,9 @@ export default async function CategoryPage({
             </Link>
           </div>
         )}
+
+        {/* Pagination */}
+        <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl={`/category/${slug}`} />
       </main>
 
       {/* Footer */}

@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { getAllPosts, getAllCategories } from '@/lib/api'
 import { getReadingTime } from '@/lib/readingTime'
 import SearchModal from '@/components/SearchModal'
+import MobileNav from '@/components/MobileNav'
 import Footer from '@/components/Footer'
 import { urlFor } from '@/lib/sanity'
 import type { Post, Category } from '@/lib/types'
@@ -102,6 +103,7 @@ export default async function HomePage() {
             <Link href="#about" className="hover:text-warm-900 transition-colors">關於</Link>
             <SearchModal />
           </div>
+          <MobileNav categories={categories_data} />
         </div>
       </nav>
 
