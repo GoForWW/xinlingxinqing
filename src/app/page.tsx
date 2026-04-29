@@ -108,26 +108,26 @@ export default async function HomePage() {
       </nav>
 
       {/* Hero */}
-      <section className="hero-bg bg-warm-50 min-h-[100dvh] pt-16 flex items-center">
+      <section className="min-h-[100dvh] pt-16 flex items-center" style={{background: 'linear-gradient(135deg, #362d26 0%, #5f473a 50%, #4a3d33 100%)'}}>
         <div className="max-w-6xl mx-auto px-6 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Text */}
             <div className="py-12 lg:py-20">
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-widest uppercase text-warm-500 bg-warm-200/60 mb-6">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-widest uppercase text-warm-300 bg-warm-50/10 mb-6" style={{color: '#b8a793'}}>
                 心理學 · 關係 · 成長
               </span>
-              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tighter leading-[1.05] text-warm-900 mb-4" style={{textShadow: '0 1px 3px rgba(250,248,245,0.8)'}}>
+              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tighter leading-[1.05] mb-4" style={{color: '#FAF8F5'}}>
                 了解自己的<br />
-                <span className="gradient-text font-semibold">藝術</span>
+                <span style={{background: 'linear-gradient(135deg, #FAF8F5, #E8E4DD 50%, #d4ccc1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text'}}>藝術</span>
               </h1>
-              <p className="font-serif text-base md:text-lg text-warm-600 leading-relaxed max-w-[40ch] mb-8">
+              <p className="font-serif text-base md:text-lg leading-relaxed max-w-[40ch] mb-8" style={{color: '#d4ccc1'}}>
                 深入探索心理學、情感關係與精神健康。<br />
                 為追求更深理解和有意義成長的人而寫。
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="#articles"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-warm-800 text-warm-50 text-sm font-medium hover:bg-warm-900 transition-all active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-warm-50 text-warm-900 text-sm font-medium hover:bg-white transition-all active:scale-[0.98]"
                 >
                   開始閱讀
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -136,7 +136,7 @@ export default async function HomePage() {
                 </Link>
                 <Link
                   href="#about"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-warm-300 text-warm-700 text-sm font-medium hover:bg-warm-100 transition-all active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-warm-300/50 text-warm-300 text-sm font-medium hover:bg-warm-50/10 transition-all active:scale-[0.98]"
                 >
                   關於本站
                 </Link>
