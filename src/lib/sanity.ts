@@ -42,6 +42,7 @@ export const queries = {
     publishedAt,
     excerpt,
     mainImage,
+    body,
     "categories": categories[]->{ _id, title, slug },
     "tags": tags,
     "author": author->{ name, image }
