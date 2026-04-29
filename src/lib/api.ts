@@ -18,12 +18,12 @@ export async function getAllPostsPaginated(page: number = 1, limit: number = POS
       }`,
       { ...params, offset: Number(offset), limit: Number(params.limit) }
     ),
-    client.fetch<{ count: number }[]>(
-      `{ "count": count(*[_type == "post"]) }`
+    client.fetch<number>(
+      `count(*[_type == "post"])`
     ),
   ])
 
-  return { posts, total: totalArr[0]?.count || 0 }
+  return { posts, total: totalArr || 0 }
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
@@ -49,13 +49,13 @@ export async function getPostsByCategoryPaginated(categorySlug: string, page: nu
       }`,
       { categorySlug, offset: Number(offset), limit: Number(offset + limit) }
     ),
-    client.fetch<{ count: number }[]>(
-      `{ "count": count(*[_type == "post" && references(*[_type == "category" && slug.current == $categorySlug]._id)]) }`,
+    client.fetch<number>(
+      `count(*[_type == "post" && references(*[_type == "category" && slug.current == $categorySlug]._id)])`,
       { categorySlug }
     ),
   ])
 
-  return { posts, total: totalArr[0]?.count || 0 }
+  return { posts, total: totalArr || 0 }
 }
 
 export async function getAllPostSlugs(): Promise<string[]> {
