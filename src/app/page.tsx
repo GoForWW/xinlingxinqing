@@ -1,12 +1,32 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getAllPosts, getAllCategories } from '@/lib/api'
 import { getReadingTime } from '@/lib/readingTime'
 import SearchModal from '@/components/SearchModal'
 import Footer from '@/components/Footer'
 import { urlFor } from '@/lib/sanity'
 import type { Post, Category } from '@/lib/types'
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    description: '深入探索心理學、情感關係、精神健康和生產力。為追求更深理解和有意義成長的人而寫。',
+    openGraph: {
+      title: '心靈心情 | Psychology & Wellbeing',
+      description: '深入探索心理學、情感關係、精神健康和生產力。為追求更深理解和有意義成長的人而寫。',
+      url: 'https://xinlingxinqing.vercel.app',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: '心靈心情 | Psychology & Wellbeing',
+      description: '深入探索心理學、情感關係、精神健康和生產力。',
+    },
+    alternates: {
+      canonical: 'https://xinlingxinqing.vercel.app',
+    },
+  }
+}
 
 export const revalidate = 60 // ISR: revalidate every 60s to pick up new posts
 
@@ -124,7 +144,7 @@ export default async function HomePage() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-24 px-6 bg-[#E8E4DD]/30">
+      <section id="about" className="py-24 px-6 bg-[#E8E4DD]/30 scroll-mt-20">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           <h2 className="text-3xl md:text-4xl font-serif text-[#4A5568]">
             關於心靈心情
@@ -158,7 +178,7 @@ export default async function HomePage() {
 
       {/* Featured Post Section */}
       {featuredPost && (
-        <section id="featured" className="py-24 px-6">
+        <section id="featured" className="py-24 px-6 scroll-mt-20">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-end justify-between mb-12">
               <div className="space-y-4">
@@ -286,7 +306,7 @@ export default async function HomePage() {
       )}
 
       {/* Categories Section with Icons */}
-      <section id="categories" className="py-24 px-6 bg-[#6B7A64]/5">
+      <section id="categories" className="py-24 px-6 bg-[#6B7A64]/5 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-3xl md:text-4xl font-serif text-[#4A5568]">

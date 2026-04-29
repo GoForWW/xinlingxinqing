@@ -1,8 +1,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { getAllPosts, getAllCategories } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: '全部文章',
+    description: '瀏覽心靈心情的所有文章 — 心理學、情感關係、精神健康和生產力。',
+    openGraph: {
+      title: '全部文章 | 心靈心情',
+      description: '瀏覽心靈心情的所有文章 — 心理學、情感關係、精神健康和生產力。',
+    },
+    alternates: {
+      canonical: '/blog',
+    },
+  }
+}
 
 export const revalidate = 60 // ISR: revalidate every 60s to pick up new posts
 

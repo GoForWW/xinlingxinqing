@@ -1,9 +1,32 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getAllCategories, getPostsByCategory, getAllPosts } from '@/lib/api'
 import { urlFor } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
+
+export const revalidate = 60
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const categories = await getAllCategories()
+  const category = categories.find((c) => c.slug.current === slug)
+
+  if (!category) return {}
+
+  return {
+    title: category.title,
+    description: category.description || `${category.title}相關文章 - 心靈心情`,
+    openGraph: {
+      title: category.title,
+      description: category.description || `${category.title}相關文章 - 心靈心情`,
+    },
+    alternates: {
+      canonical: `/category/${slug}`,
+    },
+  }
+}
 
 function formatDate(dateString: string) {
   const date = new Date(dateString)

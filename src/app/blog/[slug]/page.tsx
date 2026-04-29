@@ -1,10 +1,43 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPostBySlug, getAllPostSlugs, getAllCategories, getRelatedPosts, getAdjacentPosts } from '@/lib/api'
 import { getReadingTimeObject } from '@/lib/readingTime'
 import { urlFor, projectId, dataset } from '@/lib/sanity'
 import type { Post } from '@/lib/types'
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getPostBySlug(slug)
+
+  if (!post) return {}
+
+  const ogImage = post.mainImage
+    ? urlFor(post.mainImage).width(1200).height(630).url()
+    : undefined
+
+  return {
+    title: post.title,
+    description: post.excerpt || `閱讀文章：${post.title}`,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt || `閱讀文章：${post.title}`,
+      type: 'article',
+      publishedTime: post.publishedAt,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt || `閱讀文章：${post.title}`,
+      images: ogImage ? [ogImage] : [],
+    },
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
+  }
+}
 import ReadingProgress from '@/components/ReadingProgress'
 import SocialShare from '@/components/SocialShare'
 import RelatedPosts from '@/components/RelatedPosts'
