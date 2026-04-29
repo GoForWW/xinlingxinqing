@@ -116,7 +116,7 @@ export default async function HomePage() {
               <span className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-widest uppercase text-warm-500 bg-warm-200/60 mb-6">
                 心理學 · 關係 · 成長
               </span>
-              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-light tracking-tighter leading-[1.05] text-warm-900 mb-4">
+              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-normal tracking-tighter leading-[1.05] text-warm-900 mb-4" style={{textShadow: '0 2px 4px rgba(0,0,0,0.08)'}}>
                 了解自己的<br />
                 <span className="gradient-text font-semibold">藝術</span>
               </h1>
