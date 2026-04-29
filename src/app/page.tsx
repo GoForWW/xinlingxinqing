@@ -28,13 +28,24 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export const revalidate = 60 // ISR: revalidate every 60s to pick up new posts
+export const revalidate = 60
 
-// Format date to Chinese format
 function formatDate(dateString: string) {
   const date = new Date(dateString)
   const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
   return `${date.getFullYear()}年${months[date.getMonth()]}${date.getDate()}日`
+}
+
+// Category color mapping
+const categoryColors: Record<string, { bg: string; text: string; badge: string }> = {
+  Psychology: { bg: 'bg-connect-light', text: 'text-connect', badge: 'bg-connect-light text-connect' },
+  'Mental Health': { bg: 'bg-mind-light', text: 'text-mind', badge: 'bg-mind-light text-mind' },
+  Productivity: { bg: 'bg-grow-light', text: 'text-grow', badge: 'bg-grow-light text-grow' },
+  Relationships: { bg: 'bg-heart-light', text: 'text-heart', badge: 'bg-heart-light text-heart' },
+}
+
+function getCategoryStyle(categoryTitle: string) {
+  return categoryColors[categoryTitle] || { bg: 'bg-warm-100', text: 'text-warm-600', badge: 'bg-warm-200 text-warm-600' }
 }
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -78,266 +89,246 @@ export default async function HomePage() {
   const recentPosts = posts.slice(1, 7)
 
   return (
-    <div className="min-h-screen bg-[#F7F4EF]">
-      {/* Header */}
-      <header className="bg-[#F7F4EF]/80 backdrop-blur-md border-b border-[#E8E4DD]/50 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="font-serif text-xl text-[#6B7A64] hover:text-[#5A6A54] transition-colors">
-              心靈心情
-            </Link>
-            <div className="flex items-center gap-8 text-sm">
-              <Link href="#about" className="text-[#6B7A64] hover:text-[#5A6A54] transition-colors">
-                關於
-              </Link>
-              <Link href="#categories" className="text-[#6B7A64] hover:text-[#5A6A54] transition-colors">
-                分類
-              </Link>
-              <SearchModal />
-            </div>
+    <div className="min-h-screen bg-warm-50">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-warm-50/80 backdrop-blur-md border-b border-warm-200/50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="font-sans text-lg font-semibold tracking-tight text-warm-800">
+            心靈心情
+          </Link>
+          <div className="hidden md:flex items-center gap-8 text-sm text-warm-600">
+            <Link href="#articles" className="hover:text-warm-900 transition-colors">最新文章</Link>
+            <Link href="#categories" className="hover:text-warm-900 transition-colors">分類</Link>
+            <Link href="#about" className="hover:text-warm-900 transition-colors">關於</Link>
+            <SearchModal />
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* Hero Section - Blog Branding */}
-      <section className="pt-32 pb-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#6B7A64]/10 rounded-full text-[#6B7A64] text-sm font-medium">
-                <span className="w-2 h-2 bg-[#6B7A64] rounded-full animate-pulse" />
-                探索人類經驗的深處
-              </div>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-[#4A5568] leading-[1.1] tracking-tight">
-                了解自己的
-                <span className="text-[#6B7A64]"> 藝術</span>
+      {/* Hero */}
+      <section className="hero-bg min-h-[100dvh] pt-16 flex items-center">
+        <div className="max-w-6xl mx-auto px-6 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Text */}
+            <div className="py-12 lg:py-20">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium tracking-widest uppercase text-warm-500 bg-warm-200/60 mb-6">
+                心理學 · 關係 · 成長
+              </span>
+              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-light tracking-tighter leading-[1.05] text-warm-900 mb-4">
+                了解自己的<br />
+                <span className="gradient-text font-semibold">藝術</span>
               </h1>
-              <p className="text-lg text-[#6B7A64] leading-relaxed max-w-lg">
-                深入探索心理學、情感關係、精神健康和生產力。為追求更深理解 和有意義成長的人而寫。
+              <p className="font-serif text-base md:text-lg text-warm-600 leading-relaxed max-w-[40ch] mb-8">
+                深入探索心理學、情感關係與精神健康。<br />
+                為追求更深理解和有意義成長的人而寫。
               </p>
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Link href="#featured" className="inline-flex items-center justify-center px-6 py-3 bg-[#6B7A64] text-white rounded-full font-medium hover:bg-[#5A6A54] transition-colors">
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="#articles"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-warm-800 text-warm-50 text-sm font-medium hover:bg-warm-900 transition-all active:scale-[0.98]"
+                >
                   開始閱讀
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 8h10" /><path d="M9 4l4 4-4 4" />
+                  </svg>
                 </Link>
-                <Link href="#about" className="inline-flex items-center justify-center px-6 py-3 border border-[#6B7A64]/30 text-[#6B7A64] rounded-full font-medium hover:bg-[#6B7A64]/5 transition-colors">
+                <Link
+                  href="#about"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-warm-300 text-warm-700 text-sm font-medium hover:bg-warm-100 transition-all active:scale-[0.98]"
+                >
                   關於本站
                 </Link>
               </div>
             </div>
-            <div className="relative">
-              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl shadow-[#4A5568]/10">
+
+            {/* Right: Image */}
+            <div className="hidden lg:block relative">
+              <div className="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)]">
                 <Image
-                  src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80"
-                  alt="Serene mountain landscape at dawn"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  src="/hero-sunrise.png"
+                  alt=""
+                  width={864}
+                  height={1152}
+                  className="w-full h-full object-cover"
+                  priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#4A5568]/20 to-transparent" />
               </div>
-              {/* Decorative element */}
-              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-[#D4A574]/30 rounded-full blur-2xl" />
-              <div className="absolute -top-6 -right-6 w-32 h-32 bg-[#6B7A64]/20 rounded-full blur-2xl" />
+              <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-2xl bg-mind-light -z-10" />
+              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-xl bg-heart-light -z-10" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-24 px-6 bg-[#E8E4DD]/30 scroll-mt-20">
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          <h2 className="text-3xl md:text-4xl font-serif text-[#4A5568]">
-            關於心靈心情
-          </h2>
-          <p className="text-lg text-[#6B7A64] leading-relaxed">
-            心靈心情探索心理學研究與日常生活的交匯點。我們相信，了解你的心智如何運作，
-            是邁向更充實、更真實人生的第一步。
-          </p>
-          <p className="text-lg text-[#6B7A64] leading-relaxed">
-            我們的文字借鑒了認知心理學、依附理論、神經科學和行為研究——
-            轉化為你可以立即應用的實用見解。
-          </p>
-          <div className="pt-8 flex justify-center gap-8 text-center">
-            <div>
-              <div className="text-3xl font-serif text-[#6B7A64]">{posts.length || '50+'}</div>
-              <div className="text-sm text-[#6B7A64]/70 mt-1">文章總數</div>
+      {/* Stats */}
+      <section className="border-y border-warm-200/60 bg-warm-50">
+        <div className="max-w-6xl mx-auto px-6 py-10">
+          <div className="grid grid-cols-3 gap-8">
+            <div className="stat-animate text-center">
+              <div className="font-sans text-3xl md:text-4xl font-semibold tracking-tight text-warm-800">{posts.length}</div>
+              <div className="font-serif text-sm text-warm-500 mt-1">文章總數</div>
             </div>
-            <div className="w-px bg-[#6B7A64]/20" />
-            <div>
-              <div className="text-3xl font-serif text-[#6B7A64]">4</div>
-              <div className="text-sm text-[#6B7A64]/70 mt-1">核心分類</div>
+            <div className="stat-animate text-center">
+              <div className="font-sans text-3xl md:text-4xl font-semibold tracking-tight text-warm-800">4</div>
+              <div className="font-serif text-sm text-warm-500 mt-1">核心分類</div>
             </div>
-            <div className="w-px bg-[#6B7A64]/20" />
-            <div>
-              <div className="text-3xl font-serif text-[#6B7A64]">每週</div>
-              <div className="text-sm text-[#6B7A64]/70 mt-1">新內容</div>
+            <div className="stat-animate text-center">
+              <div className="font-sans text-3xl md:text-4xl font-semibold tracking-tight text-warm-800">每週</div>
+              <div className="font-serif text-sm text-warm-500 mt-1">新內容</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Post Section */}
-      {featuredPost && (
-        <section id="featured" className="py-24 px-6 scroll-mt-20">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-end justify-between mb-12">
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-4xl font-serif text-[#4A5568]">
-                  最新文章
-                </h2>
-                <p className="text-lg text-[#6B7A64] max-w-xl">
-                  深入探索人類心理和行為的細微之處。
-                </p>
-              </div>
-              <Link href="/blog" className="hidden md:flex items-center gap-2 text-[#6B7A64] font-medium hover:text-[#5A6A54] transition-colors">
-                查看全部文章
-                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
+      {/* Articles */}
+      <section id="articles" className="py-24 px-6 scroll-mt-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <h2 className="font-serif text-3xl md:text-4xl font-light tracking-tight text-warm-900 mb-3">最新文章</h2>
+              <p className="font-serif text-base text-warm-500">深入探索人類心理和行為的細微之處。</p>
             </div>
+            <Link
+              href="/blog"
+              className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warm-100 text-warm-600 text-sm font-medium hover:bg-warm-200 transition-colors"
+            >
+              查看全部
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 8h10" /><path d="M9 4l4 4-4 4" />
+              </svg>
+            </Link>
+          </div>
 
-            {/* Featured Post - Large */}
-            <Link href={`/blog/${featuredPost.slug.current}`} className="group">
-              <div className="relative rounded-3xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 mb-12">
-                <div className="grid md:grid-cols-2 gap-0">
-                  {featuredPost.mainImage && (
-                    <div className="relative h-72 md:h-96">
-                      <Image
-                        src={urlFor(featuredPost.mainImage).width(800).height(600).url()}
-                        alt={featuredPost.title}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        priority
-                      />
+          {/* Featured Post */}
+          {featuredPost && (
+            <Link href={`/blog/${featuredPost.slug.current}`} className="group block mb-10">
+              <article className="grid md:grid-cols-2 gap-0 bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                {featuredPost.mainImage && (
+                  <div className="relative h-72 md:h-auto min-h-[320px] overflow-hidden">
+                    <Image
+                      src={urlFor(featuredPost.mainImage).width(800).height(600).url()}
+                      alt={featuredPost.title}
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      priority
+                    />
+                  </div>
+                )}
+                <div className="p-8 md:p-12 flex flex-col justify-center">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    {featuredPost.categories?.[0] && (
+                      <span className={`px-3 py-1 text-xs rounded-full font-medium ${categoryColors[featuredPost.categories[0].title]?.badge || 'bg-warm-200 text-warm-600'}`}>
+                        {featuredPost.categories[0].title}
+                      </span>
+                    )}
+                    <span className="text-xs text-warm-400">{formatDate(featuredPost.publishedAt)}</span>
+                    <span className="text-xs text-warm-400">· {getReadingTime(featuredPost.excerpt || '', featuredPost.body)}</span>
+                  </div>
+                  <h3 className="text-2xl md:text-3xl font-serif font-semibold text-warm-900 mb-4 group-hover:text-warm-700 transition-colors">
+                    {featuredPost.title}
+                  </h3>
+                  {featuredPost.excerpt && (
+                    <p className="font-serif text-warm-600 text-base leading-relaxed">{featuredPost.excerpt}</p>
+                  )}
+                  {featuredPost.author && (
+                    <div className="mt-6 flex items-center gap-3">
+                      {featuredPost.author.image && (
+                        <div className="relative w-9 h-9 rounded-full overflow-hidden">
+                          <Image src={urlFor(featuredPost.author.image).width(72).height(72).url()} alt={featuredPost.author.name} fill className="object-cover" />
+                        </div>
+                      )}
+                      <span className="text-sm text-warm-500">{featuredPost.author.name}</span>
                     </div>
                   )}
-                  <div className="p-8 md:p-12 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-4">
-                      {featuredPost.categories?.[0] && (
-                        <span className="px-3 py-1 bg-[#6B7A64]/10 text-[#6B7A64] text-sm rounded-full">
-                          {featuredPost.categories[0].title}
+                </div>
+              </article>
+            </Link>
+          )}
+
+          {/* Recent Posts */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {recentPosts.map((post) => (
+              <Link key={post._id} href={`/blog/${post.slug.current}`} className="group">
+                <article className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                  {post.mainImage ? (
+                    <div className="relative h-48 overflow-hidden">
+                      <Image
+                        src={urlFor(post.mainImage).width(600).height(400).url()}
+                        alt={post.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-48 bg-warm-100 flex items-center justify-center">
+                      <span className="text-warm-300 font-serif text-lg">心靈心情</span>
+                    </div>
+                  )}
+                  <div className="p-6">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      {post.categories?.[0] && (
+                        <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${categoryColors[post.categories[0].title]?.badge || 'bg-warm-200 text-warm-600'}`}>
+                          {post.categories[0].title}
                         </span>
                       )}
-                      <span className="text-sm text-[#6B7A64]">
-                        {formatDate(featuredPost.publishedAt)}
-                      </span>
-                      <span className="text-sm text-[#6B7A64]/70">· {getReadingTime(featuredPost.excerpt || '', featuredPost.body)}</span>
+                      <span className="text-xs text-warm-400">{formatDate(post.publishedAt)}</span>
+                      <span className="text-xs text-warm-400">· {getReadingTime(post.excerpt || '', post.body)}</span>
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-serif font-bold text-[#4A5568] mb-4 group-hover:text-[#6B7A64] transition-colors">
-                      {featuredPost.title}
-                    </h3>
-                    {featuredPost.excerpt && (
-                      <p className="text-[#6B7A64] text-lg leading-relaxed">
-                        {featuredPost.excerpt}
-                      </p>
-                    )}
-                    {featuredPost.author && (
-                      <div className="mt-6 flex items-center gap-3">
-                        {featuredPost.author.image && (
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                            <Image
-                              src={urlFor(featuredPost.author.image).width(80).height(80).url()}
-                              alt={featuredPost.author.name}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <span className="text-sm text-[#6B7A64]">{featuredPost.author.name}</span>
-                      </div>
+                    <h4 className="text-lg font-serif font-semibold text-warm-900 mb-2 group-hover:text-warm-700 transition-colors line-clamp-2">
+                      {post.title}
+                    </h4>
+                    {post.excerpt && (
+                      <p className="text-sm font-serif text-warm-500 line-clamp-3">{post.excerpt}</p>
                     )}
                   </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* Recent Posts Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentPosts.map((post) => (
-                <Link
-                  key={post._id}
-                  href={`/blog/${post.slug.current}`}
-                  className="group"
-                >
-                  <article className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                    {post.mainImage && (
-                      <div className="relative h-48 overflow-hidden">
-                        <Image
-                          src={urlFor(post.mainImage).width(600).height(400).url()}
-                          alt={post.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    <div className="p-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        {post.categories?.[0] && (
-                          <span className="px-2 py-0.5 bg-[#6B7A64]/10 text-[#6B7A64] text-xs rounded-full">
-                            {post.categories[0].title}
-                          </span>
-                        )}
-                        <span className="text-xs text-[#6B7A64]">
-                          {formatDate(post.publishedAt)}
-                        </span>
-                        <span className="text-xs text-[#6B7A64]/70">· {getReadingTime(post.excerpt || '', post.body)}</span>
-                      </div>
-                      <h4 className="text-lg font-serif font-semibold text-[#4A5568] mb-2 group-hover:text-[#6B7A64] transition-colors line-clamp-2">
-                        {post.title}
-                      </h4>
-                      {post.excerpt && (
-                        <p className="text-sm text-[#6B7A64] line-clamp-3">{post.excerpt}</p>
-                      )}
-                    </div>
-                  </article>
-                </Link>
-              ))}
-            </div>
-
-            {posts.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-[#6B7A64] text-lg">暫時沒有文章</p>
-                <p className="text-sm text-[#6B7A64]/70 mt-2">即將推出更多內容，敬請期待</p>
-              </div>
-            )}
+                </article>
+              </Link>
+            ))}
           </div>
-        </section>
-      )}
 
-      {/* Categories Section with Icons */}
-      <section id="categories" className="py-24 px-6 bg-[#6B7A64]/5 scroll-mt-20">
+          {posts.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-warm-600 font-serif text-lg">暫時沒有文章</p>
+              <p className="text-sm text-warm-400 mt-2">即將推出更多內容，敬請期待</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Categories */}
+      <section id="categories" className="py-24 px-6 scroll-mt-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-serif text-[#4A5568]">
+          <div className="text-center mb-12">
+            <h2 className="font-serif text-3xl md:text-4xl font-light tracking-tight text-warm-900 mb-3">
               我們的領域
             </h2>
-            <p className="text-lg text-[#6B7A64] max-w-2xl mx-auto">
+            <p className="font-serif text-base text-warm-500 max-w-2xl mx-auto">
               四個互聯的核心領域，每一個都提供了不同的視角去理解自己和周圍的世界。
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories_data.slice(0, 4).map((category) => {
+              const style = getCategoryStyle(category.title)
               const icon = categoryIcons[category.title] || categoryIcons['Mental Health']
               return (
                 <Link
                   key={category._id}
                   href={`/category/${category.slug.current}`}
-                  className="group p-8 bg-white rounded-3xl border border-[#E8E4DD] hover:shadow-md transition-all duration-300"
+                  className={`group p-8 rounded-3xl border border-warm-200 hover:shadow-md transition-all duration-300 ${style.bg}`}
                 >
-                  <div className="text-[#6B7A64] mb-6 group-hover:text-[#5A6A54] transition-colors">
+                  <div className={`mb-6 ${style.text} group-hover:scale-105 transition-transform duration-300`}>
                     {icon}
                   </div>
-                  <h3 className="text-xl font-serif text-[#4A5568] mb-2">
+                  <h3 className="text-xl font-serif text-warm-900 mb-2">
                     {category.title}
                   </h3>
-                  <p className="text-[#6B7A64]/70 text-sm leading-relaxed">
+                  <p className="text-sm text-warm-500 leading-relaxed font-serif">
                     {category.description || '探索這個領域的文章'}
                   </p>
-                  <div className="mt-6 flex items-center gap-2 text-[#6B7A64] text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    探索
-                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M3 8h10M9 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+                  <div className="mt-6 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: style.text.match(/-(\w+)/)?.[0]?.slice(1) ? undefined : style.text }}>
+                    <span className={style.text}>探索</span>
+                    <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 8h10" /><path d="M9 4l4 4-4 4" />
                     </svg>
                   </div>
                 </Link>

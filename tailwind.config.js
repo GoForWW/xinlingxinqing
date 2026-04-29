@@ -47,6 +47,40 @@ module.exports = {
           800: '#574A3C',
           900: '#4A4035',
         },
+        // Redesign warm palette
+        warm: {
+          50: '#faf8f5',
+          100: '#f5f0ea',
+          200: '#e8dfd3',
+          300: '#d4c4b0',
+          400: '#b89f83',
+          500: '#a08160',
+          600: '#8a6950',
+          700: '#735544',
+          800: '#5f473a',
+          900: '#513d32',
+        },
+        // Category accent colors
+        mind: {
+          DEFAULT: '#4f6f52',
+          light: '#e8f0e6',
+          mid: '#86a788',
+        },
+        heart: {
+          DEFAULT: '#b05b6f',
+          light: '#f7e8ec',
+          mid: '#d48b9a',
+        },
+        grow: {
+          DEFAULT: '#c4943e',
+          light: '#faf0dc',
+          mid: '#dbb668',
+        },
+        connect: {
+          DEFAULT: '#6b7fa8',
+          light: '#e8edf5',
+          mid: '#95a8c9',
+        },
       },
       fontFamily: {
         serif: ['var(--font-source-serif)', 'Georgia', 'serif'],
